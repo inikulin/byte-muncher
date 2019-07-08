@@ -26,4 +26,4 @@ mod test_utils {
     }
 }
 
-mod patterns;
+mod dsl;
