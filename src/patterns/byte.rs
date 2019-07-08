@@ -34,25 +34,8 @@ impl Parse for BytePattern {
 #[cfg(test)]
 mod parse_tests {
     use super::*;
-    use syn::parse_str;
 
-    macro_rules! parse {
-        ($t:tt) => {
-            parse_str::<BytePattern>(stringify!($t))
-        };
-    }
-
-    macro_rules! parse_ok {
-        ($t:tt) => {
-            parse!($t).unwrap()
-        };
-    }
-
-    macro_rules! parse_err {
-        ($t:tt) => {
-            format!("{}", parse!($t).unwrap_err())
-        };
-    }
+    curry_parse_macros!(BytePattern);
 
     #[test]
     fn parse_char_literal() {
