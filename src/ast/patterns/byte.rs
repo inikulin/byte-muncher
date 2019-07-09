@@ -2,9 +2,12 @@ use std::convert::TryFrom;
 use syn::parse::{Parse, ParseStream};
 use syn::{Error as ParseError, LitChar, LitInt, Result as ParseResult};
 
-const ERR_CHAR_IS_NOT_ASCII: &str = "character pattern should be an ASCII character";
+pub(super) const ERR_CHAR_IS_NOT_ASCII: &str = concat![
+    "character should be in the ASCII range.",
+    " For bigger byte values use numeric representation (e.g. 0x1F)"
+];
 
-const ERR_INT_IS_OUT_OF_BOUNDS: &str =
+pub(super) const ERR_INT_IS_OUT_OF_BOUNDS: &str =
     "numeric pattern is not in the byte value range (0x00-0xFF, 0-255, etc.)";
 
 #[derive(PartialEq, Debug)]
@@ -37,9 +40,9 @@ impl Parse for BytePattern {
         let lookahead = input.lookahead1();
 
         if lookahead.peek(LitChar) {
-            BytePattern::parse_from_char_literal(input)
+            Self::parse_from_char_literal(input)
         } else if lookahead.peek(LitInt) {
-            BytePattern::parse_from_int_literal(input)
+            Self::parse_from_int_literal(input)
         } else {
             Err(lookahead.error())
         }
