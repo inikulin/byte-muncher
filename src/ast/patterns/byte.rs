@@ -8,7 +8,7 @@ const ERR_INT_IS_OUT_OF_BOUNDS: &str =
     "numeric pattern is not in the byte value range (0x00-0xFF, 0-255, etc.)";
 
 #[derive(PartialEq, Debug)]
-pub struct BytePattern(u8);
+pub struct BytePattern(pub u8);
 
 impl BytePattern {
     fn parse_from_char_literal(input: ParseStream) -> ParseResult<Self> {
@@ -47,7 +47,7 @@ impl Parse for BytePattern {
 }
 
 #[cfg(test)]
-mod parse_tests {
+mod tests {
     use super::*;
 
     curry_parse_macros!($BytePattern);
@@ -60,7 +60,7 @@ mod parse_tests {
     }
 
     #[test]
-    fn parse_non_ascii_char_literal_error() {
+    fn non_ascii_char_literal_error() {
         assert_eq!(parse_err! { '£' }, ERR_CHAR_IS_NOT_ASCII);
         assert_eq!(parse_err! { '🐼' }, ERR_CHAR_IS_NOT_ASCII);
     }
@@ -73,13 +73,13 @@ mod parse_tests {
     }
 
     #[test]
-    fn parse_int_literal_outside_byte_range_error() {
+    fn int_literal_outside_byte_range_error() {
         assert_eq!(parse_err! { 0x777 }, ERR_INT_IS_OUT_OF_BOUNDS);
         assert_eq!(parse_err! { 256 }, ERR_INT_IS_OUT_OF_BOUNDS);
     }
 
     #[test]
-    fn parse_unexpected_token_error() {
+    fn unexpected_token_error() {
         assert_eq!(
             parse_err! { -3 },
             "expected character literal or integer literal"
