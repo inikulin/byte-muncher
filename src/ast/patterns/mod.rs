@@ -30,6 +30,7 @@ pub enum Pattern {
     Sequence(SequencePattern),
     Set(SetPattern),
     InputState(InputStatePattern),
+    Condition(String),
     Any,
 }
 
@@ -59,8 +60,6 @@ impl Pattern {
             "eoc" => input_state_pat!(Eoc),
             "eof" => input_state_pat!(Eof),
 
-            "_" => Ok(Pattern::Any),
-
             _ => Err(ParseError::new_spanned(ident, ERR_UNKNOWN_PATTERN)),
         }
     }
@@ -71,19 +70,19 @@ impl Parse for Pattern {
         let lookahead = input.lookahead1();
 
         if lookahead.peek(LitChar) || lookahead.peek(LitInt) {
-            let pat = input.parse::<BytePattern>()?;
-
-            Ok(Pattern::Byte(pat.0))
+            Ok(Pattern::Byte(input.parse::<BytePattern>()?.0))
         } else if lookahead.peek(LitStr) || lookahead.peek(Bracket) {
-            let pat = input.parse::<SequencePattern>()?;
-
-            Ok(Pattern::Sequence(pat))
+            Ok(Pattern::Sequence(input.parse::<SequencePattern>()?))
         } else if lookahead.peek(Ident) {
             Ok(Self::parse_from_ident(input)?)
         } else if lookahead.peek(Token! { _ }) {
             input.parse::<Token! { _ }>()?;
 
             Ok(Pattern::Any)
+        } else if lookahead.peek(Token! { if }) {
+            input.parse::<Token! { if }>()?;
+
+            Ok(Pattern::Condition(input.parse::<Ident>()?.to_string()))
         } else {
             Err(lookahead.error())
         }
@@ -143,6 +142,16 @@ mod tests {
     }
 
     #[test]
+    fn parse_condition_pattern() {
+        assert_eq!(parse_ok! { if foobar }, Pattern::Condition("foobar".into()));
+    }
+
+    #[test]
+    fn condition_pattern_without_identifier_error() {
+        assert_eq!(parse_err! { if => }, "expected identifier");
+    }
+
+    #[test]
     fn parse_any_pattern() {
         assert_eq!(parse_ok! { _ }, Pattern::Any);
     }
@@ -157,8 +166,8 @@ mod tests {
         assert_eq!(
             parse_err! { -3 },
             concat![
-                "expected one of: character literal, integer",
-                " literal, string literal, square brackets, identifier, `_`"
+                "expected one of: character literal, integer literal, ",
+                "string literal, square brackets, identifier, `_`, `if`"
             ]
         );
     }

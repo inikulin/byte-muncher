@@ -27,3 +27,4 @@ mod test_utils {
 }
 
 mod patterns;
+mod arm;
