@@ -27,5 +27,5 @@ mod test_utils {
 }
 
 mod patterns;
-mod arm;
+mod match_arm;
 mod action_list;

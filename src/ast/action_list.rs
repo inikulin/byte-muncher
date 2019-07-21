@@ -12,7 +12,7 @@ const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
 const ERR_SEMICOLON_TERMINATED_TRANSITION: &str =
     "state transition don't need to be terminated by a semicolon";
 
-#[derive(Default, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct StateTransition {
     pub to_state: String,
     pub reconsume: bool,
