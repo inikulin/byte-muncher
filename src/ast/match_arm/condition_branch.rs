@@ -1,4 +1,4 @@
-use crate::ast::action_list::ActionList;
+use crate::ast::ActionList;
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult};
 
@@ -39,7 +39,7 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::action_list::StateTransition;
+    use crate::ast::{ActionCall, CallInfo, StateTransition};
 
     curry_parse_macros!($ConditionBranch);
 
@@ -54,7 +54,10 @@ mod tests {
             ConditionBranch {
                 condition: "cond".into(),
                 actions: ActionList {
-                    actions: vec!["foo".into()],
+                    actions: vec![ActionCall {
+                        name: "foo".into(),
+                        call_info: CallInfo::default()
+                    }],
                     state_transition: Some(StateTransition {
                         to_state: "bar_state".into(),
                         reconsume: false

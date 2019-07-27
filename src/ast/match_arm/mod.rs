@@ -1,10 +1,12 @@
 mod condition_branch;
 mod rhs;
 
-use self::rhs::MatchArmRhs;
 use super::patterns::Pattern;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
+
+pub use self::condition_branch::ConditionBranch;
+pub use self::rhs::MatchArmRhs;
 
 #[derive(PartialEq, Debug)]
 pub struct MatchArm {
@@ -28,9 +30,9 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::action_list::{ActionList, StateTransition};
-    use crate::ast::patterns::SetPattern;
-    use super::condition_branch::ConditionBranch;
+    use crate::ast::{
+        ActionCall, ActionList, CallInfo, ConditionBranch, SetPattern, StateTransition,
+    };
 
     curry_parse_macros!($MatchArm);
 
@@ -41,7 +43,7 @@ mod tests {
             MatchArm {
                 pattern: Pattern::Byte(b'a'),
                 rhs: MatchArmRhs::ActionList(ActionList {
-                    actions: vec!["foo".into()],
+                    actions: vec![act!("foo")],
                     state_transition: Some(StateTransition {
                         to_state: "baz_state".into(),
                         reconsume: false
@@ -51,11 +53,21 @@ mod tests {
         );
 
         assert_eq!(
-            parse_ok! { alpha => ( foo; bar; baz; ) },
+            parse_ok! { alpha => ( foo; bar; baz(42)?; ) },
             MatchArm {
                 pattern: Pattern::Set(SetPattern::Alpha),
                 rhs: MatchArmRhs::ActionList(ActionList {
-                    actions: vec!["foo".into(), "bar".into(), "baz".into()],
+                    actions: vec![
+                        act!("foo"),
+                        act!("bar"),
+                        ActionCall {
+                            name: "baz".into(),
+                            call_info: CallInfo {
+                                args: vec![lit!(42)],
+                                with_error_check: true
+                            }
+                        }
+                    ],
                     state_transition: None
                 })
             }
@@ -75,13 +87,13 @@ mod tests {
                     if_branch: ConditionBranch {
                         condition: "cond".into(),
                         actions: ActionList {
-                            actions: vec!["foo".into()],
+                            actions: vec![act!("foo")],
                             state_transition: None
                         }
                     },
                     else_if_branches: vec![],
                     else_branch: ActionList {
-                        actions: vec!["bar".into()],
+                        actions: vec![act!("bar")],
                         state_transition: None
                     }
                 }

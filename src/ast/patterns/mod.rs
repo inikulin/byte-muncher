@@ -1,11 +1,12 @@
 mod byte;
 mod sequence;
 
-use self::byte::BytePattern;
-use self::sequence::SequencePattern;
 use syn::parse::{Parse, ParseStream};
 use syn::token::Bracket;
 use syn::{Error as ParseError, Ident, LitChar, LitInt, LitStr, Result as ParseResult, Token};
+
+pub use self::byte::BytePattern;
+pub use self::sequence::SequencePattern;
 
 const ERR_UNKNOWN_PATTERN: &str = "unknown pattern";
 

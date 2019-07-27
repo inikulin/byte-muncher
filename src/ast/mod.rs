@@ -6,7 +6,7 @@ mod test_utils {
         // need to pass `$` as an argument to macro.
         ($d:tt $AstNode:ident) => {
             macro_rules! parse {
-                ($d ($d t:tt)+) => {
+                ($d ($d t:tt)*) => {
                     syn::parse_str::<$AstNode>(stringify!($d ($d t)*))
                 };
             }
@@ -22,6 +22,22 @@ mod test_utils {
                     format!("{}", parse!($d ($d t)*).unwrap_err())
                 };
             }
+
+        };
+    }
+
+    macro_rules! act {
+        ($name:expr) => {
+            crate::ast::ActionCall {
+                name: $name.into(),
+                call_info: crate::ast::CallInfo::default(),
+            }
+        };
+    }
+
+    macro_rules! lit {
+        ($t:tt) => {
+            syn::parse_str::<syn::Lit>(stringify!($t)).unwrap()
         };
     }
 }
@@ -29,3 +45,7 @@ mod test_utils {
 mod patterns;
 mod match_arm;
 mod action_list;
+
+pub use self::patterns::*;
+pub use self::match_arm::*;
+pub use self::action_list::*;

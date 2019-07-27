@@ -1,5 +1,5 @@
 use super::condition_branch::ConditionBranch;
-use crate::ast::action_list::ActionList;
+use crate::ast::ActionList;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
 
@@ -18,7 +18,7 @@ impl MatchArmRhs {
         input.parse::<Token! { if }>()?;
 
         let if_branch = input.parse::<ConditionBranch>()?;
-        let mut else_if_branches = Vec::default();
+        let mut else_if_branches = vec![];
 
         loop {
             input.parse::<Token! { else }>()?;
@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(
             parse_ok! { ( foo; bar; ) },
             MatchArmRhs::ActionList(ActionList {
-                actions: vec!["foo".into(), "bar".into()],
+                actions: vec![act!("foo"), act!("bar")],
                 state_transition: None
             })
         );
@@ -83,13 +83,13 @@ mod tests {
                 if_branch: ConditionBranch {
                     condition: "cond".into(),
                     actions: ActionList {
-                        actions: vec!["foo".into(), "bar".into()],
+                        actions: vec![act!("foo"), act!("bar")],
                         state_transition: None
                     }
                 },
                 else_if_branches: vec![],
                 else_branch: ActionList {
-                    actions: vec!["baz".into()],
+                    actions: vec![act!("baz")],
                     state_transition: None
                 }
             }
@@ -114,7 +114,7 @@ mod tests {
                 if_branch: ConditionBranch {
                     condition: "cond1".into(),
                     actions: ActionList {
-                        actions: vec!["foo".into()],
+                        actions: vec![act!("foo")],
                         state_transition: None
                     }
                 },
@@ -122,20 +122,20 @@ mod tests {
                     ConditionBranch {
                         condition: "cond2".into(),
                         actions: ActionList {
-                            actions: vec!["baz".into()],
+                            actions: vec![act!("baz")],
                             state_transition: None
                         }
                     },
                     ConditionBranch {
                         condition: "cond3".into(),
                         actions: ActionList {
-                            actions: vec!["qux".into()],
+                            actions: vec![act!("qux")],
                             state_transition: None
                         }
                     }
                 ],
                 else_branch: ActionList {
-                    actions: vec!["quz".into()],
+                    actions: vec![act!("quz")],
                     state_transition: None
                 }
             }

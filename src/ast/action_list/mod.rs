@@ -1,5 +1,9 @@
+mod call_info;
+
 use syn::parse::{Parse, ParseStream};
 use syn::{parenthesized, Ident, Result as ParseResult, Token};
+
+pub use self::call_info::CallInfo;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
     "action list should contain semicolon-terminated actions with ",
@@ -46,9 +50,15 @@ impl StateTransition {
     }
 }
 
+#[derive(PartialEq, Debug)]
+pub struct ActionCall {
+    pub name: String,
+    pub call_info: CallInfo,
+}
+
 #[derive(Default, PartialEq, Debug)]
 pub struct ActionList {
-    pub actions: Vec<String>,
+    pub actions: Vec<ActionCall>,
     pub state_transition: Option<StateTransition>,
 }
 
@@ -62,7 +72,11 @@ impl ActionList {
             if action == "reconsume" && input.peek(Token! { in }) {
                 self.state_transition = Some(StateTransition::parse_reconsume(&input)?);
             } else {
-                self.actions.push(action);
+                self.actions.push(ActionCall {
+                    name: action,
+                    call_info: input.parse()?,
+                });
+
                 input.parse::<Token! { ; }>()?;
             }
         } else {
@@ -120,7 +134,7 @@ mod tests {
         assert_eq!(
             parse_ok! { (foo; bar; baz;) },
             ActionList {
-                actions: vec!["foo".into(), "bar".into(), "baz".into()],
+                actions: vec![act!("foo"), act!("bar"), act!("baz")],
                 state_transition: None
             }
         );
@@ -131,7 +145,7 @@ mod tests {
         assert_eq!(
             parse_ok! { ( foo; bar; --> baz_state ) },
             ActionList {
-                actions: vec!["foo".into(), "bar".into()],
+                actions: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
                     to_state: "baz_state".into(),
                     reconsume: false
@@ -142,7 +156,7 @@ mod tests {
         assert_eq!(
             parse_ok! { ( foo; reconsume in qux_state ) },
             ActionList {
-                actions: vec!["foo".into()],
+                actions: vec![act!("foo")],
                 state_transition: Some(StateTransition {
                     to_state: "qux_state".into(),
                     reconsume: true
