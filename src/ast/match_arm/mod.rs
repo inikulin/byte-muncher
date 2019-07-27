@@ -1,12 +1,15 @@
-use super::action_list::ActionList;
+mod condition_branch;
+mod rhs;
+
 use super::patterns::Pattern;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
+use self::rhs::MatchArmRhs;
 
 #[derive(PartialEq, Debug)]
 pub struct MatchArm {
     pub pattern: Pattern,
-    pub action_list: ActionList,
+    pub rhs: MatchArmRhs,
 }
 
 impl Parse for MatchArm {
@@ -17,7 +20,7 @@ impl Parse for MatchArm {
 
         Ok(MatchArm {
             pattern,
-            action_list: input.parse::<ActionList>()?,
+            rhs: input.parse()?,
         })
     }
 }
@@ -25,7 +28,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::action_list::StateTransition;
+    use crate::ast::action_list::{ActionList, StateTransition};
     use crate::ast::patterns::SetPattern;
 
     curry_parse_macros!($MatchArm);
@@ -36,13 +39,13 @@ mod tests {
             parse_ok! { 'a' => ( foo; --> baz_state ) },
             MatchArm {
                 pattern: Pattern::Byte(b'a'),
-                action_list: ActionList {
+                rhs: MatchArmRhs::ActionList(ActionList {
                     actions: vec!["foo".into()],
                     state_transition: Some(StateTransition {
                         to_state: "baz_state".into(),
                         reconsume: false
                     })
-                }
+                })
             }
         );
 
@@ -50,10 +53,10 @@ mod tests {
             parse_ok! { alpha => ( foo; bar; baz; ) },
             MatchArm {
                 pattern: Pattern::Set(SetPattern::Alpha),
-                action_list: ActionList {
+                rhs: MatchArmRhs::ActionList(ActionList {
                     actions: vec!["foo".into(), "bar".into(), "baz".into()],
                     state_transition: None
-                }
+                })
             }
         );
     }
