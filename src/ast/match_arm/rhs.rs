@@ -15,16 +15,13 @@ pub enum MatchArmRhs {
 
 impl MatchArmRhs {
     fn parse_condition(input: ParseStream) -> ParseResult<Self> {
-        input.parse::<Token! { if }>()?;
-
         let if_branch = input.parse::<ConditionBranch>()?;
         let mut else_if_branches = vec![];
 
         loop {
             input.parse::<Token! { else }>()?;
 
-            if input.peek(Token! { if }) {
-                input.parse::<Token! { if }>()?;
+            if parse_if_present!(input, { if }) {
                 else_if_branches.push(input.parse::<ConditionBranch>()?);
             } else {
                 break;
@@ -41,7 +38,7 @@ impl MatchArmRhs {
 
 impl Parse for MatchArmRhs {
     fn parse(input: ParseStream) -> ParseResult<Self> {
-        if input.peek(Token! { if }) {
+        if parse_if_present!(input, { if }) {
             Self::parse_condition(input)
         } else {
             let action_list = input.parse::<ActionList>()?;

@@ -22,34 +22,6 @@ pub struct StateTransition {
     pub reconsume: bool,
 }
 
-impl StateTransition {
-    #[inline]
-    fn is_arrow(input: ParseStream) -> bool {
-        input.peek(Token! { - }) && input.peek2(Token! { - }) && input.peek3(Token! { > })
-    }
-
-    #[inline]
-    fn parse_dest_state(input: ParseStream, reconsume: bool) -> ParseResult<Self> {
-        Ok(StateTransition {
-            to_state: input.parse::<Ident>()?.to_string(),
-            reconsume,
-        })
-    }
-
-    fn parse(input: ParseStream) -> ParseResult<Self> {
-        input.parse::<Token! { - }>()?;
-        input.parse::<Token! { - }>()?;
-        input.parse::<Token! { > }>()?;
-        Self::parse_dest_state(input, false)
-    }
-
-    fn parse_reconsume(input: ParseStream) -> ParseResult<Self> {
-        // NOTE: it is expected that "reconsume" identifier is already parsed at this point.
-        input.parse::<Token! { in }>()?;
-        Self::parse_dest_state(input, true)
-    }
-}
-
 #[derive(PartialEq, Debug)]
 pub struct ActionCall {
     pub name: String,
@@ -63,14 +35,27 @@ pub struct ActionList {
 }
 
 impl ActionList {
+    fn parse_state_transition_target(
+        &mut self,
+        input: ParseStream,
+        reconsume: bool,
+    ) -> ParseResult<()> {
+        self.state_transition = Some(StateTransition {
+            to_state: input.parse::<Ident>()?.to_string(),
+            reconsume,
+        });
+
+        Ok(())
+    }
+
     fn parse_item(&mut self, input: ParseStream) -> ParseResult<()> {
-        if StateTransition::is_arrow(input) {
-            self.state_transition = Some(StateTransition::parse(&input)?);
+        if parse3_if_present!(input, { - }, { - }, { > }) {
+            self.parse_state_transition_target(input, false)?;
         } else if input.peek(Ident) {
             let action = input.parse::<Ident>()?.to_string();
 
-            if action == "reconsume" && input.peek(Token! { in }) {
-                self.state_transition = Some(StateTransition::parse_reconsume(&input)?);
+            if action == "reconsume" && parse_if_present!(input, { in }) {
+                self.parse_state_transition_target(input, true)?;
             } else {
                 self.actions.push(ActionCall {
                     name: action,

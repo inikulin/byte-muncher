@@ -22,7 +22,6 @@ mod test_utils {
                     format!("{}", parse!($d ($d t)*).unwrap_err())
                 };
             }
-
         };
     }
 
@@ -42,10 +41,38 @@ mod test_utils {
     }
 }
 
-mod patterns;
-mod match_arm;
-mod action_list;
+macro_rules! parse_if_present {
+    ($input:ident, { $t:tt }) => {
+        if $input.peek(syn::Token! { $t }) {
+            $input.parse::<syn::Token! { $t }>()?;
+            true
+        } else {
+            false
+        }
+    };
+}
 
-pub use self::patterns::*;
-pub use self::match_arm::*;
+macro_rules! parse3_if_present {
+    ($input:ident, {$t1:tt}, {$t2:tt}, {$t3:tt}) => {
+        if $input.peek(syn::Token! { $t1 }) &&
+            $input.peek2(syn::Token! { $t2 }) &&
+            $input.peek3(syn::Token! { $t3 }) {
+            $input.parse::<syn::Token! { $t1 }>()?;
+            $input.parse::<syn::Token! { $t2 }>()?;
+            $input.parse::<syn::Token! { $t3 }>()?;
+            true
+        } else {
+            false
+        }
+    };
+}
+
+mod action_list;
+mod match_arm;
+mod patterns;
+mod state;
+
 pub use self::action_list::*;
+pub use self::match_arm::*;
+pub use self::patterns::*;
+pub use self::state::*;

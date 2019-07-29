@@ -37,12 +37,7 @@ impl Parse for CallInfo {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         Ok(CallInfo {
             args: Self::parse_args(input)?,
-            with_error_check: if input.peek(Token! { ? }) {
-                input.parse::<Token! { ? }>()?;
-                true
-            } else {
-                false
-            },
+            with_error_check: parse_if_present!(input, { ? }),
         })
     }
 }
