@@ -6,8 +6,8 @@ use syn::{parenthesized, Ident, Result as ParseResult, Token};
 pub use self::call_info::CallInfo;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
-    "action list should contain semicolon-terminated actions with ",
-    "an optional trailing state transition (`--> {state}` or `reconsume in {state}`)"
+    "action list should contain a state transition or semicolon-terminated ",
+    "action calls with an optional trailing state transition"
 ];
 
 const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
@@ -94,8 +94,12 @@ impl Parse for ActionList {
 
         parenthesized!(items in input);
 
-        while !items.is_empty() {
-            if list.state_transition.is_some() {
+        loop {
+            list.parse_item(&items)?;
+
+            if items.is_empty() {
+                break;
+            } else if list.state_transition.is_some() {
                 let msg = if items.peek(Token! { ; }) {
                     ERR_SEMICOLON_TERMINATED_TRANSITION
                 } else {
@@ -104,8 +108,6 @@ impl Parse for ActionList {
 
                 return Err(input.error(msg));
             }
-
-            list.parse_item(&items)?;
         }
 
         Ok(list)
@@ -117,17 +119,6 @@ mod tests {
     use super::*;
 
     curry_parse_macros!($ActionList);
-
-    #[test]
-    fn parse_empty_list() {
-        assert_eq!(
-            parse_ok! { () },
-            ActionList {
-                actions: vec![],
-                state_transition: None
-            }
-        );
-    }
 
     #[test]
     fn parse_actions() {
@@ -184,6 +175,14 @@ mod tests {
                     reconsume: true
                 })
             }
+        );
+    }
+
+    #[test]
+    fn empty_list_error() {
+        assert_eq!(
+            parse_err! { () },
+            format!("unexpected end of input, {}", ERR_UNEXPECTED_ITEM)
         );
     }
 
