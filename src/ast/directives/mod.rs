@@ -6,12 +6,12 @@ use syn::{parenthesized, Ident, Result as ParseResult, Token};
 pub use self::call_info::CallInfo;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
-    "action list should contain semicolon-terminated actions with ",
+    "match arm directives should consist of zero or more semicolon-terminated action_calls with ",
     "an optional trailing state transition (`--> {state}` or `reconsume in {state}`)"
 ];
 
 const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
-    "state transition should be the last entry in the action list";
+    "state transition should be the last directive in a match arm";
 
 const ERR_SEMICOLON_TERMINATED_TRANSITION: &str =
     "state transition don't need to be terminated by a semicolon";
@@ -29,12 +29,12 @@ pub struct ActionCall {
 }
 
 #[derive(Default, PartialEq, Debug)]
-pub struct ActionList {
-    pub actions: Vec<ActionCall>,
+pub struct Directives {
+    pub action_calls: Vec<ActionCall>,
     pub state_transition: Option<StateTransition>,
 }
 
-impl ActionList {
+impl Directives {
     fn parse_state_transition_target(
         &mut self,
         input: ParseStream,
@@ -57,7 +57,7 @@ impl ActionList {
             if action == "reconsume" && parse_if_present!(input, { in }) {
                 self.parse_state_transition_target(input, true)?;
             } else {
-                self.actions.push(ActionCall {
+                self.action_calls.push(ActionCall {
                     name: action,
                     call_info: input.parse()?,
                 });
@@ -72,7 +72,7 @@ impl ActionList {
     }
 }
 
-impl Parse for ActionList {
+impl Parse for Directives {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         let items;
         let mut list = Self::default();
@@ -101,25 +101,25 @@ impl Parse for ActionList {
 mod tests {
     use super::*;
 
-    curry_parse_macros!($ActionList);
+    curry_parse_macros!($Directives);
 
     #[test]
     fn parse_empty_list() {
         assert_eq!(
             parse_ok! { () },
-            ActionList {
-                actions: vec![],
+            Directives {
+                action_calls: vec![],
                 state_transition: None
             }
         );
     }
 
     #[test]
-    fn parse_actions() {
+    fn parse_action_calls() {
         assert_eq!(
             parse_ok! { (foo; bar; baz;) },
-            ActionList {
-                actions: vec![act!("foo"), act!("bar"), act!("baz")],
+            Directives {
+                action_calls: vec![act!("foo"), act!("bar"), act!("baz")],
                 state_transition: None
             }
         );
@@ -129,8 +129,8 @@ mod tests {
     fn parse_state_transition() {
         assert_eq!(
             parse_ok! { ( foo; bar; --> baz_state ) },
-            ActionList {
-                actions: vec![act!("foo"), act!("bar")],
+            Directives {
+                action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
                     to_state: "baz_state".into(),
                     reconsume: false
@@ -140,8 +140,8 @@ mod tests {
 
         assert_eq!(
             parse_ok! { ( foo; reconsume in qux_state ) },
-            ActionList {
-                actions: vec![act!("foo")],
+            Directives {
+                action_calls: vec![act!("foo")],
                 state_transition: Some(StateTransition {
                     to_state: "qux_state".into(),
                     reconsume: true
@@ -151,8 +151,8 @@ mod tests {
 
         assert_eq!(
             parse_ok! { ( --> foo_state ) },
-            ActionList {
-                actions: vec![],
+            Directives {
+                action_calls: vec![],
                 state_transition: Some(StateTransition {
                     to_state: "foo_state".into(),
                     reconsume: false
@@ -162,8 +162,8 @@ mod tests {
 
         assert_eq!(
             parse_ok! { ( reconsume in foo_state ) },
-            ActionList {
-                actions: vec![],
+            Directives {
+                action_calls: vec![],
                 state_transition: Some(StateTransition {
                     to_state: "foo_state".into(),
                     reconsume: true

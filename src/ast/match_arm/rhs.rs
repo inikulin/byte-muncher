@@ -1,15 +1,15 @@
 use super::condition_branch::ConditionBranch;
-use crate::ast::ActionList;
+use crate::ast::Directives;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
 
 #[derive(PartialEq, Debug)]
 pub enum MatchArmRhs {
-    ActionList(ActionList),
+    Directives(Directives),
     Condition {
         if_branch: ConditionBranch,
         else_if_branches: Vec<ConditionBranch>,
-        else_branch: ActionList,
+        else_branch: Directives,
     },
 }
 
@@ -31,7 +31,7 @@ impl MatchArmRhs {
         Ok(MatchArmRhs::Condition {
             if_branch,
             else_if_branches,
-            else_branch: ConditionBranch::parse_braced_action_list(input)?,
+            else_branch: ConditionBranch::parse_braced_directives(input)?,
         })
     }
 }
@@ -41,9 +41,9 @@ impl Parse for MatchArmRhs {
         if parse_if_present!(input, { if }) {
             Self::parse_condition(input)
         } else {
-            let action_list = input.parse::<ActionList>()?;
+            let directives = input.parse::<Directives>()?;
 
-            Ok(MatchArmRhs::ActionList(action_list))
+            Ok(MatchArmRhs::Directives(directives))
         }
     }
 }
@@ -51,16 +51,16 @@ impl Parse for MatchArmRhs {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::match_arm::condition_branch::ERR_UNEXPECTED_CONTENT_AFTER_ACTION_LIST;
+    use crate::ast::match_arm::condition_branch::ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES;
 
     curry_parse_macros!($MatchArmRhs);
 
     #[test]
-    fn parse_action_list() {
+    fn parse_directives() {
         assert_eq!(
             parse_ok! { ( foo; bar; ) },
-            MatchArmRhs::ActionList(ActionList {
-                actions: vec![act!("foo"), act!("bar")],
+            MatchArmRhs::Directives(Directives {
+                action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: None
             })
         );
@@ -79,14 +79,14 @@ mod tests {
             MatchArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond".into(),
-                    actions: ActionList {
-                        actions: vec![act!("foo"), act!("bar")],
+                    directives: Directives {
+                        action_calls: vec![act!("foo"), act!("bar")],
                         state_transition: None
                     }
                 },
                 else_if_branches: vec![],
-                else_branch: ActionList {
-                    actions: vec![act!("baz")],
+                else_branch: Directives {
+                    action_calls: vec![act!("baz")],
                     state_transition: None
                 }
             }
@@ -110,29 +110,29 @@ mod tests {
             MatchArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond1".into(),
-                    actions: ActionList {
-                        actions: vec![act!("foo")],
+                    directives: Directives {
+                        action_calls: vec![act!("foo")],
                         state_transition: None
                     }
                 },
                 else_if_branches: vec![
                     ConditionBranch {
                         condition: "cond2".into(),
-                        actions: ActionList {
-                            actions: vec![act!("baz")],
+                        directives: Directives {
+                            action_calls: vec![act!("baz")],
                             state_transition: None
                         }
                     },
                     ConditionBranch {
                         condition: "cond3".into(),
-                        actions: ActionList {
-                            actions: vec![act!("qux")],
+                        directives: Directives {
+                            action_calls: vec![act!("qux")],
                             state_transition: None
                         }
                     }
                 ],
-                else_branch: ActionList {
-                    actions: vec![act!("quz")],
+                else_branch: Directives {
+                    action_calls: vec![act!("quz")],
                     state_transition: None
                 }
             }
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn unexpected_content_after_action_list_in_else_branch_error() {
+    fn unexpected_content_after_directives_in_else_branch_error() {
         assert_eq!(
             parse_err! [
                 if cond {
@@ -161,7 +161,7 @@ mod tests {
                     ( bar; ) 42
                 }
             ],
-            ERR_UNEXPECTED_CONTENT_AFTER_ACTION_LIST
+            ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES
         );
     }
 

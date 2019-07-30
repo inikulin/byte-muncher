@@ -67,12 +67,12 @@ macro_rules! parse3_if_present {
     };
 }
 
-mod action_list;
+mod directives;
 mod match_arm;
 mod patterns;
 mod state;
 
-pub use self::action_list::*;
+pub use self::directives::*;
 pub use self::match_arm::*;
 pub use self::patterns::*;
 pub use self::state::*;

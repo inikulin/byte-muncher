@@ -31,7 +31,7 @@ impl Parse for MatchArm {
 mod tests {
     use super::*;
     use crate::ast::{
-        ActionCall, ActionList, CallInfo, ConditionBranch, SetPattern, StateTransition,
+        ActionCall, Directives, CallInfo, ConditionBranch, SetPattern, StateTransition,
     };
 
     curry_parse_macros!($MatchArm);
@@ -42,8 +42,8 @@ mod tests {
             parse_ok! { 'a' => ( foo; --> baz_state ) },
             MatchArm {
                 pattern: Pattern::Byte(b'a'),
-                rhs: MatchArmRhs::ActionList(ActionList {
-                    actions: vec![act!("foo")],
+                rhs: MatchArmRhs::Directives(Directives {
+                    action_calls: vec![act!("foo")],
                     state_transition: Some(StateTransition {
                         to_state: "baz_state".into(),
                         reconsume: false
@@ -56,8 +56,8 @@ mod tests {
             parse_ok! { alpha => ( foo; bar; baz(42)?; ) },
             MatchArm {
                 pattern: Pattern::Set(SetPattern::Alpha),
-                rhs: MatchArmRhs::ActionList(ActionList {
-                    actions: vec![
+                rhs: MatchArmRhs::Directives(Directives {
+                    action_calls: vec![
                         act!("foo"),
                         act!("bar"),
                         ActionCall {
@@ -86,14 +86,14 @@ mod tests {
                 rhs: MatchArmRhs::Condition {
                     if_branch: ConditionBranch {
                         condition: "cond".into(),
-                        actions: ActionList {
-                            actions: vec![act!("foo")],
+                        directives: Directives {
+                            action_calls: vec![act!("foo")],
                             state_transition: None
                         }
                     },
                     else_if_branches: vec![],
-                    else_branch: ActionList {
-                        actions: vec![act!("bar")],
+                    else_branch: Directives {
+                        action_calls: vec![act!("bar")],
                         state_transition: None
                     }
                 }

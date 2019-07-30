@@ -1,21 +1,21 @@
-use crate::ast::{ActionList, MatchArm};
+use crate::ast::{Directives, MatchArm};
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult};
 
 const ERR_TRANSITION_IN_ENTER_ACTIONS: &str =
-    "state enter action list contains a state transition, i.e. state body will never be executed";
+    "state enter directives contain a state transition, i.e. state body will never be executed";
 
 #[derive(PartialEq, Debug)]
 pub struct State {
     pub name: String,
-    pub actions_on_enter: Option<ActionList>,
+    pub actions_on_enter: Option<Directives>,
     pub arms: Vec<MatchArm>,
 }
 
 impl State {
-    fn parse_actions_on_enter(input: ParseStream) -> ParseResult<Option<ActionList>> {
+    fn parse_actions_on_enter(input: ParseStream) -> ParseResult<Option<Directives>> {
         if parse3_if_present!(input, { < }, { - }, { - }) {
-            let actions = input.parse::<ActionList>()?;
+            let actions = input.parse::<Directives>()?;
 
             if actions.state_transition.is_none() {
                 Ok(Some(actions))
@@ -77,8 +77,8 @@ mod tests {
                 arms: vec![
                     MatchArm {
                         pattern: Pattern::Byte(b'a'),
-                        rhs: MatchArmRhs::ActionList(ActionList {
-                            actions: vec![act!("bar")],
+                        rhs: MatchArmRhs::Directives(Directives {
+                            action_calls: vec![act!("bar")],
                             state_transition: Some(StateTransition {
                                 to_state: "baz_state".into(),
                                 reconsume: true
@@ -87,8 +87,8 @@ mod tests {
                     },
                     MatchArm {
                         pattern: Pattern::Any,
-                        rhs: MatchArmRhs::ActionList(ActionList {
-                            actions: vec![act!("qux"), act!("quz")],
+                        rhs: MatchArmRhs::Directives(Directives {
+                            action_calls: vec![act!("qux"), act!("quz")],
                             state_transition: None
                         })
                     }
@@ -107,14 +107,14 @@ mod tests {
             ],
             State {
                 name: "foo_state".into(),
-                actions_on_enter: Some(ActionList {
-                    actions: vec![act!("bar")],
+                actions_on_enter: Some(Directives {
+                    action_calls: vec![act!("bar")],
                     state_transition: None
                 }),
                 arms: vec![MatchArm {
                     pattern: Pattern::Any,
-                    rhs: MatchArmRhs::ActionList(ActionList {
-                        actions: vec![act!("baz")],
+                    rhs: MatchArmRhs::Directives(Directives {
+                        action_calls: vec![act!("baz")],
                         state_transition: None
                     })
                 }]
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn state_transition_in_state_enter_action_list_error() {
+    fn state_transition_in_state_enter_directives_error() {
         assert_eq!(
             parse_err![
                 foo_state <-- ( --> bar_state) {

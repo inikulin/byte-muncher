@@ -1,28 +1,28 @@
-use crate::ast::ActionList;
+use crate::ast::Directives;
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult};
 
-pub(super) const ERR_UNEXPECTED_CONTENT_AFTER_ACTION_LIST: &str =
-    "condition branch shouldn't contatin anything besides a single action list";
+pub(super) const ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES: &str =
+    "condition branch shouldn't contain anything besides a single directive list";
 
 #[derive(PartialEq, Debug)]
 pub struct ConditionBranch {
     pub condition: String,
-    pub actions: ActionList,
+    pub directives: Directives,
 }
 
 impl ConditionBranch {
-    pub fn parse_braced_action_list(input: ParseStream) -> ParseResult<ActionList> {
+    pub fn parse_braced_directives(input: ParseStream) -> ParseResult<Directives> {
         let braces_content;
 
         braced!(braces_content in input);
 
-        let actions = braces_content.parse::<ActionList>()?;
+        let actions = braces_content.parse::<Directives>()?;
 
         if braces_content.is_empty() {
             Ok(actions)
         } else {
-            Err(braces_content.error(ERR_UNEXPECTED_CONTENT_AFTER_ACTION_LIST))
+            Err(braces_content.error(ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES))
         }
     }
 }
@@ -31,7 +31,7 @@ impl Parse for ConditionBranch {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         Ok(ConditionBranch {
             condition: input.parse::<Ident>()?.to_string(),
-            actions: Self::parse_braced_action_list(input)?,
+            directives: Self::parse_braced_directives(input)?,
         })
     }
 }
@@ -53,8 +53,8 @@ mod tests {
             ],
             ConditionBranch {
                 condition: "cond".into(),
-                actions: ActionList {
-                    actions: vec![ActionCall {
+                directives: Directives {
+                    action_calls: vec![ActionCall {
                         name: "foo".into(),
                         call_info: CallInfo::default()
                     }],
@@ -68,14 +68,14 @@ mod tests {
     }
 
     #[test]
-    fn content_after_action_list_error() {
+    fn content_after_directives_error() {
         assert_eq!(
             parse_err! [
                 some_condition {
                     ( foo; bar; ) ( baz; )
                 }
             ],
-            ERR_UNEXPECTED_CONTENT_AFTER_ACTION_LIST
+            ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES
         );
     }
 }
