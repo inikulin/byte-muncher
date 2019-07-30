@@ -39,7 +39,6 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{ActionCall, CallInfo};
 
     curry_parse_macros!($ConditionBranch);
 
@@ -54,10 +53,7 @@ mod tests {
             ConditionBranch {
                 condition: "cond".into(),
                 directives: Directives {
-                    action_calls: vec![ActionCall {
-                        name: "foo".into(),
-                        call_info: CallInfo::default()
-                    }],
+                    action_calls: vec![act!("foo")],
                     state_transition: Some("bar_state".into())
                 }
             }

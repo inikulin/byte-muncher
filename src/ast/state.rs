@@ -2,6 +2,12 @@ use crate::ast::{Directives, MatchArm};
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult};
 
+// TODO
+// 1. <back> action (only one in list)
+// 2. <mark>(ident) action
+// 3. range pattern
+// 4. Set patter to PredefinedAlias
+
 const ERR_TRANSITION_IN_ENTER_ACTIONS: &str =
     "state enter directives contain a state transition, i.e. state body will never be executed";
 

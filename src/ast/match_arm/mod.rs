@@ -30,7 +30,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{ActionCall, CallInfo, ConditionBranch, Directives, SetPattern};
+    use crate::ast::{ActionCall, ConditionBranch, Directives, SetPattern};
 
     curry_parse_macros!($MatchArm);
 
@@ -57,10 +57,8 @@ mod tests {
                         act!("bar"),
                         ActionCall {
                             name: "baz".into(),
-                            call_info: CallInfo {
-                                args: vec![lit!(42)],
-                                with_error_check: true
-                            }
+                            args: vec![lit!(42)],
+                            with_error_check: true
                         }
                     ],
                     state_transition: None

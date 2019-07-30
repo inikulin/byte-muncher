@@ -29,7 +29,8 @@ mod test_utils {
         ($name:expr) => {
             crate::ast::ActionCall {
                 name: $name.into(),
-                call_info: crate::ast::CallInfo::default(),
+                args: vec![],
+                with_error_check: false,
             }
         };
     }

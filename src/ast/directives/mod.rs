@@ -1,9 +1,9 @@
-mod call_info;
+mod action_call;
 
 use syn::parse::{Parse, ParseStream};
 use syn::{parenthesized, Ident, Result as ParseResult, Token};
 
-pub use self::call_info::CallInfo;
+pub use self::action_call::ActionCall;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
     "match arm directives should consist of zero or more semicolon-terminated action_calls with ",
@@ -15,12 +15,6 @@ const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
 
 const ERR_SEMICOLON_TERMINATED_TRANSITION: &str =
     "state transition don't need to be terminated by a semicolon";
-
-#[derive(PartialEq, Debug)]
-pub struct ActionCall {
-    pub name: String,
-    pub call_info: CallInfo,
-}
 
 #[derive(Default, PartialEq, Debug)]
 pub struct Directives {
@@ -35,14 +29,7 @@ impl Directives {
 
             self.state_transition = Some(state_transition);
         } else if input.peek(Ident) {
-            let action = input.parse::<Ident>()?.to_string();
-
-            self.action_calls.push(ActionCall {
-                name: action,
-                call_info: input.parse()?,
-            });
-
-            input.parse::<Token! { ; }>()?;
+            self.action_calls.push(input.parse::<ActionCall>()?);
         } else {
             return Err(input.error(ERR_UNEXPECTED_ITEM));
         }
