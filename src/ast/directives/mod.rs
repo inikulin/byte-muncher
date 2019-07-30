@@ -7,7 +7,7 @@ pub use self::call_info::CallInfo;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
     "match arm directives should consist of zero or more semicolon-terminated action_calls with ",
-    "an optional trailing state transition (`--> {state}` or `reconsume in {state}`)"
+    "an optional trailing state transition (`--> {state}`)"
 ];
 
 const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
@@ -15,12 +15,6 @@ const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
 
 const ERR_SEMICOLON_TERMINATED_TRANSITION: &str =
     "state transition don't need to be terminated by a semicolon";
-
-#[derive(PartialEq, Debug)]
-pub struct StateTransition {
-    pub to_state: String,
-    pub reconsume: bool,
-}
 
 #[derive(PartialEq, Debug)]
 pub struct ActionCall {
@@ -31,39 +25,24 @@ pub struct ActionCall {
 #[derive(Default, PartialEq, Debug)]
 pub struct Directives {
     pub action_calls: Vec<ActionCall>,
-    pub state_transition: Option<StateTransition>,
+    pub state_transition: Option<String>,
 }
 
 impl Directives {
-    fn parse_state_transition_target(
-        &mut self,
-        input: ParseStream,
-        reconsume: bool,
-    ) -> ParseResult<()> {
-        self.state_transition = Some(StateTransition {
-            to_state: input.parse::<Ident>()?.to_string(),
-            reconsume,
-        });
-
-        Ok(())
-    }
-
     fn parse_item(&mut self, input: ParseStream) -> ParseResult<()> {
         if parse3_if_present!(input, { - }, { - }, { > }) {
-            self.parse_state_transition_target(input, false)?;
+            let state_transition = input.parse::<Ident>()?.to_string();
+
+            self.state_transition = Some(state_transition);
         } else if input.peek(Ident) {
             let action = input.parse::<Ident>()?.to_string();
 
-            if action == "reconsume" && parse_if_present!(input, { in }) {
-                self.parse_state_transition_target(input, true)?;
-            } else {
-                self.action_calls.push(ActionCall {
-                    name: action,
-                    call_info: input.parse()?,
-                });
+            self.action_calls.push(ActionCall {
+                name: action,
+                call_info: input.parse()?,
+            });
 
-                input.parse::<Token! { ; }>()?;
-            }
+            input.parse::<Token! { ; }>()?;
         } else {
             return Err(input.error(ERR_UNEXPECTED_ITEM));
         }
@@ -131,21 +110,7 @@ mod tests {
             parse_ok! { ( foo; bar; --> baz_state ) },
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
-                state_transition: Some(StateTransition {
-                    to_state: "baz_state".into(),
-                    reconsume: false
-                })
-            }
-        );
-
-        assert_eq!(
-            parse_ok! { ( foo; reconsume in qux_state ) },
-            Directives {
-                action_calls: vec![act!("foo")],
-                state_transition: Some(StateTransition {
-                    to_state: "qux_state".into(),
-                    reconsume: true
-                })
+                state_transition: Some("baz_state".into())
             }
         );
 
@@ -153,21 +118,7 @@ mod tests {
             parse_ok! { ( --> foo_state ) },
             Directives {
                 action_calls: vec![],
-                state_transition: Some(StateTransition {
-                    to_state: "foo_state".into(),
-                    reconsume: false
-                })
-            }
-        );
-
-        assert_eq!(
-            parse_ok! { ( reconsume in foo_state ) },
-            Directives {
-                action_calls: vec![],
-                state_transition: Some(StateTransition {
-                    to_state: "foo_state".into(),
-                    reconsume: true
-                })
+                state_transition: Some("foo_state".into())
             }
         );
     }
@@ -189,11 +140,6 @@ mod tests {
             parse_err! { ( --> ) },
             "unexpected end of input, expected identifier"
         );
-
-        assert_eq!(
-            parse_err! { ( reconsume in ) },
-            "unexpected end of input, expected identifier"
-        );
     }
 
     #[test]
@@ -213,28 +159,12 @@ mod tests {
                 ERR_TRANSITION_IS_NOT_LAST_ENTRY
             )
         );
-
-        assert_eq!(
-            parse_err! { ( foo; reconsume in bar_state --> baz_state; ) },
-            format!(
-                "unexpected end of input, {}",
-                ERR_TRANSITION_IS_NOT_LAST_ENTRY
-            )
-        );
     }
 
     #[test]
     fn semicolon_terminated_transition_error() {
         assert_eq!(
             parse_err! { ( foo; --> bar_state; ) },
-            format!(
-                "unexpected end of input, {}",
-                ERR_SEMICOLON_TERMINATED_TRANSITION
-            )
-        );
-
-        assert_eq!(
-            parse_err! { ( foo; reconsume in bar_state; ) },
             format!(
                 "unexpected end of input, {}",
                 ERR_SEMICOLON_TERMINATED_TRANSITION

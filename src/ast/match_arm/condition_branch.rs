@@ -39,7 +39,7 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{ActionCall, CallInfo, StateTransition};
+    use crate::ast::{ActionCall, CallInfo};
 
     curry_parse_macros!($ConditionBranch);
 
@@ -58,10 +58,7 @@ mod tests {
                         name: "foo".into(),
                         call_info: CallInfo::default()
                     }],
-                    state_transition: Some(StateTransition {
-                        to_state: "bar_state".into(),
-                        reconsume: false
-                    })
+                    state_transition: Some("bar_state".into())
                 }
             }
         );

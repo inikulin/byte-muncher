@@ -58,7 +58,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{MatchArmRhs, Pattern, StateTransition};
+    use crate::ast::{MatchArmRhs, Pattern};
 
     curry_parse_macros!($State);
 
@@ -67,7 +67,7 @@ mod tests {
         assert_eq!(
             parse_ok! [
                 foo_state {
-                    'a' => ( bar; reconsume in baz_state )
+                    'a' => ( bar; --> baz_state )
                     _ => ( qux; quz; )
                 }
             ],
@@ -79,10 +79,7 @@ mod tests {
                         pattern: Pattern::Byte(b'a'),
                         rhs: MatchArmRhs::Directives(Directives {
                             action_calls: vec![act!("bar")],
-                            state_transition: Some(StateTransition {
-                                to_state: "baz_state".into(),
-                                reconsume: true
-                            })
+                            state_transition: Some("baz_state".into())
                         })
                     },
                     MatchArm {

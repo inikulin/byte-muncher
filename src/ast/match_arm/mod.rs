@@ -30,9 +30,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{
-        ActionCall, Directives, CallInfo, ConditionBranch, SetPattern, StateTransition,
-    };
+    use crate::ast::{ActionCall, CallInfo, ConditionBranch, Directives, SetPattern};
 
     curry_parse_macros!($MatchArm);
 
@@ -44,10 +42,7 @@ mod tests {
                 pattern: Pattern::Byte(b'a'),
                 rhs: MatchArmRhs::Directives(Directives {
                     action_calls: vec![act!("foo")],
-                    state_transition: Some(StateTransition {
-                        to_state: "baz_state".into(),
-                        reconsume: false
-                    })
+                    state_transition: Some("baz_state".into())
                 })
             }
         );
