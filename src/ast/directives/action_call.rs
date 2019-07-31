@@ -1,17 +1,24 @@
 use syn::parse::{Parse, ParseStream};
 use syn::token::Paren;
-use syn::{parenthesized, Ident, Lit, Result as ParseResult, Token};
+use syn::{parenthesized, Error as ParseError, Ident, Lit, Result as ParseResult, Token};
 
 const ERR_EMPTY_ARGS: &str = concat![
     "expected at least one action argument (action calls ",
     "without arguments don't need to have parentheses)"
 ];
 
-#[derive(Debug, PartialEq, Default)]
-pub struct ActionCall {
-    pub name: String,
-    pub args: Vec<Lit>,
-    pub with_error_check: bool,
+const ERR_UNKNOW_BUILT_IN: &str = "unknown built-in action";
+const ERR_MARK_TOO_MANY_ARGUMENTS: &str = "<mark> has only one argument";
+
+#[derive(Debug, PartialEq)]
+pub enum ActionCall {
+    UserDefined {
+        name: String,
+        args: Vec<Lit>,
+        with_error_check: bool,
+    },
+    Back,
+    Mark(String),
 }
 
 impl ActionCall {
@@ -35,14 +42,42 @@ impl ActionCall {
             Ok(vec![])
         }
     }
+
+    fn parse_marker(input: ParseStream) -> ParseResult<String> {
+        let parens_content;
+
+        parenthesized!(parens_content in input);
+
+        let marker = parens_content.parse::<Ident>()?.to_string();
+
+        if parens_content.is_empty() {
+            Ok(marker)
+        } else {
+            Err(parens_content.error(ERR_MARK_TOO_MANY_ARGUMENTS))
+        }
+    }
 }
 
 impl Parse for ActionCall {
     fn parse(input: ParseStream) -> ParseResult<Self> {
-        let call = ActionCall {
-            name: input.parse::<Ident>()?.to_string(),
-            args: Self::parse_args(input)?,
-            with_error_check: parse_if_present!(input, { ? }),
+        let built_in = parse_if_present!(input, { < });
+        let name_ident = input.parse::<Ident>()?;
+        let name = name_ident.to_string();
+
+        let call = if built_in {
+            input.parse::<Token! { > }>()?;
+
+            match name.as_str() {
+                "back" => ActionCall::Back,
+                "mark" => ActionCall::Mark(Self::parse_marker(input)?),
+                _ => return Err(ParseError::new_spanned(name_ident, ERR_UNKNOW_BUILT_IN)),
+            }
+        } else {
+            ActionCall::UserDefined {
+                name,
+                args: Self::parse_args(input)?,
+                with_error_check: parse_if_present!(input, { ? }),
+            }
         };
 
         input.parse::<Token! { ; }>()?;
@@ -58,10 +93,10 @@ mod tests {
     curry_parse_macros!($ActionCall);
 
     #[test]
-    fn parse() {
+    fn parse_user_defined() {
         assert_eq!(
             parse_ok! { foo; },
-            ActionCall {
+            ActionCall::UserDefined {
                 name: "foo".into(),
                 args: vec![],
                 with_error_check: false
@@ -70,7 +105,7 @@ mod tests {
 
         assert_eq!(
             parse_ok! { foo("bar", 123); },
-            ActionCall {
+            ActionCall::UserDefined {
                 name: "foo".into(),
                 args: vec![lit!("bar"), lit!(123)],
                 with_error_check: false
@@ -79,7 +114,7 @@ mod tests {
 
         assert_eq!(
             parse_ok! { bar(true, 123)?; },
-            ActionCall {
+            ActionCall::UserDefined {
                 name: "bar".into(),
                 args: vec![lit!(true), lit!(123)],
                 with_error_check: true
@@ -88,12 +123,43 @@ mod tests {
 
         assert_eq!(
             parse_ok! { baz?; },
-            ActionCall {
+            ActionCall::UserDefined {
                 name: "baz".into(),
                 args: vec![],
                 with_error_check: true
             }
         );
+    }
+
+    #[test]
+    fn parse_back_built_in() {
+        assert_eq!(parse_ok! { <back>; }, ActionCall::Back);
+    }
+
+    #[test]
+    fn parse_mark_built_in() {
+        assert_eq!(
+            parse_ok! { <mark>(token_start); },
+            ActionCall::Mark("token_start".into())
+        );
+    }
+
+    #[test]
+    fn missing_mark_built_in_argument_error() {
+        assert_eq!(
+            parse_err! { <mark>(); },
+            "unexpected end of input, expected identifier"
+        );
+    }
+
+    #[test]
+    fn mark_built_in_too_many_arguments_error() {
+        assert_eq!(parse_err! { <mark>(m1, m2); }, ERR_MARK_TOO_MANY_ARGUMENTS);
+    }
+
+    #[test]
+    fn unknown_built_in_error() {
+        assert_eq!(parse_err! { <foo>(); }, ERR_UNKNOW_BUILT_IN);
     }
 
     #[test]

@@ -55,7 +55,7 @@ mod tests {
                     action_calls: vec![
                         act!("foo"),
                         act!("bar"),
-                        ActionCall {
+                        ActionCall::UserDefined {
                             name: "baz".into(),
                             args: vec![lit!(42)],
                             with_error_check: true
