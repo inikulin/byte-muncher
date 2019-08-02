@@ -10,10 +10,16 @@ const ERR_UNEXPECTED_ITEM: &str = concat![
     "an optional trailing state transition (`--> {state}`)"
 ];
 
+#[derive(PartialEq, Debug)]
+pub struct StateTransition {
+    pub to_state: String,
+    pub reconsume: bool,
+}
+
 #[derive(Default, PartialEq, Debug)]
 pub struct Directives {
     pub action_calls: Vec<ActionCall>,
-    pub state_transition: Option<String>,
+    pub state_transition: Option<StateTransition>,
 }
 
 impl Directives {
@@ -31,13 +37,27 @@ impl Directives {
         }
     }
 
+    fn parse_state_transition_destination(
+        &mut self,
+        input: ParseStream,
+        reconsume: bool,
+    ) -> ParseResult<()> {
+        self.state_transition = Some(StateTransition {
+            to_state: input.parse::<Ident>()?.to_string(),
+            reconsume,
+        });
+
+        input.parse::<Token! { . }>()?;
+
+        Ok(())
+    }
+
     fn parse_item(&mut self, input: ParseStream) -> ParseResult<bool> {
         if parse3_if_present!(input, { - }, { - }, { > }) {
-            let state_transition = input.parse::<Ident>()?.to_string();
-
-            self.state_transition = Some(state_transition);
-            input.parse::<Token! { . }>()?;
-
+            self.parse_state_transition_destination(input, false)?;
+            Ok(true)
+        } else if parse2_if_present!(input, { as }, { in }) {
+            self.parse_state_transition_destination(input, true)?;
             Ok(true)
         } else if input.peek(Ident) {
             self.action_calls.push(input.parse::<ActionCall>()?);
@@ -64,6 +84,7 @@ impl Parse for Directives {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::StateTransition;
 
     curry_parse_macros!($Directives);
 
@@ -95,7 +116,10 @@ mod tests {
             parse_ok! { foo, bar, --> baz_state. },
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
-                state_transition: Some("baz_state".into())
+                state_transition: Some(StateTransition {
+                    to_state: "baz_state".into(),
+                    reconsume: false
+                })
             }
         );
 
@@ -103,7 +127,32 @@ mod tests {
             parse_ok! { --> foo_state. },
             Directives {
                 action_calls: vec![],
-                state_transition: Some("foo_state".into())
+                state_transition: Some(StateTransition {
+                    to_state: "foo_state".into(),
+                    reconsume: false
+                })
+            }
+        );
+
+        assert_eq!(
+            parse_ok! { foo, bar, as in baz_state. },
+            Directives {
+                action_calls: vec![act!("foo"), act!("bar")],
+                state_transition: Some(StateTransition {
+                    to_state: "baz_state".into(),
+                    reconsume: true
+                })
+            }
+        );
+
+        assert_eq!(
+            parse_ok! { as in foo_state. },
+            Directives {
+                action_calls: vec![],
+                state_transition: Some(StateTransition {
+                    to_state: "foo_state".into(),
+                    reconsume: true
+                })
             }
         );
     }

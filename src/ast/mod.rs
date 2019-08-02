@@ -53,6 +53,18 @@ macro_rules! parse_if_present {
     };
 }
 
+macro_rules! parse2_if_present {
+    ($input:ident, {$t1:tt}, {$t2:tt}) => {
+        if $input.peek(syn::Token! { $t1 }) && $input.peek2(syn::Token! { $t2 }) {
+            $input.parse::<syn::Token! { $t1 }>()?;
+            $input.parse::<syn::Token! { $t2 }>()?;
+            true
+        } else {
+            false
+        }
+    };
+}
+
 macro_rules! parse3_if_present {
     ($input:ident, {$t1:tt}, {$t2:tt}, {$t3:tt}) => {
         if $input.peek(syn::Token! { $t1 }) &&

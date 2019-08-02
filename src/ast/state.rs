@@ -3,7 +3,6 @@ use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
 
 // TODO
-// 1. as in transition
 // 2. --> arm
 // 3. @start @end actions
 
@@ -50,7 +49,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{Directives, MatchArmRhs, Pattern};
+    use crate::ast::{Directives, MatchArmRhs, Pattern, StateTransition};
 
     curry_parse_macros!($State);
 
@@ -60,7 +59,7 @@ mod tests {
             parse_ok! [
                 foo_state:
                     'a' => bar, --> baz_state.
-                    _   => qux, quz.
+                    _   => qux, quz, as in qux_state.
             ],
             State {
                 name: "foo_state".into(),
@@ -69,14 +68,20 @@ mod tests {
                         pattern: Pattern::Byte(b'a'),
                         rhs: MatchArmRhs::Directives(Directives {
                             action_calls: vec![act!("bar")],
-                            state_transition: Some("baz_state".into())
+                            state_transition: Some(StateTransition {
+                                to_state: "baz_state".into(),
+                                reconsume: false
+                            })
                         })
                     },
                     MatchArm {
                         pattern: Pattern::Any,
                         rhs: MatchArmRhs::Directives(Directives {
                             action_calls: vec![act!("qux"), act!("quz")],
-                            state_transition: None
+                            state_transition: Some(StateTransition {
+                                to_state: "qux_state".into(),
+                                reconsume: true
+                            })
                         })
                     }
                 ]

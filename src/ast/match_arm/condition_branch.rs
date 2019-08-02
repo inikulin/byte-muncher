@@ -39,6 +39,7 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::StateTransition;
 
     curry_parse_macros!($ConditionBranch);
 
@@ -54,7 +55,10 @@ mod tests {
                 condition: "cond".into(),
                 directives: Directives {
                     action_calls: vec![act!("foo")],
-                    state_transition: Some("bar_state".into())
+                    state_transition: Some(StateTransition {
+                        to_state: "bar_state".into(),
+                        reconsume: false
+                    })
                 }
             }
         );
