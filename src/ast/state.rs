@@ -1,48 +1,26 @@
-use crate::ast::{Directives, MatchArm};
+use crate::ast::MatchArm;
 use syn::parse::{Parse, ParseStream};
-use syn::{braced, Ident, Result as ParseResult};
-
-// TODO
-// 1. <back> action (only one in list)
-// 2. <mark>(ident) action
-// 3. range pattern
-// 4. Set patter to PredefinedAlias
-
-const ERR_TRANSITION_IN_ENTER_ACTIONS: &str =
-    "state enter directives contain a state transition, i.e. state body will never be executed";
+use syn::{Ident, Result as ParseResult, Token};
 
 #[derive(PartialEq, Debug)]
 pub struct State {
     pub name: String,
-    pub actions_on_enter: Option<Directives>,
     pub arms: Vec<MatchArm>,
 }
 
 impl State {
-    fn parse_actions_on_enter(input: ParseStream) -> ParseResult<Option<Directives>> {
-        if parse3_if_present!(input, { < }, { - }, { - }) {
-            let actions = input.parse::<Directives>()?;
-
-            if actions.state_transition.is_none() {
-                Ok(Some(actions))
-            } else {
-                Err(input.error(ERR_TRANSITION_IN_ENTER_ACTIONS))
-            }
-        } else {
-            Ok(None)
-        }
+    #[inline]
+    fn is_next_state_name(input: ParseStream) -> bool {
+        input.peek(Ident) && input.peek2(Token! { : })
     }
 
     fn parse_arms(input: ParseStream) -> ParseResult<Vec<MatchArm>> {
-        let braces_content;
         let mut arms = vec![];
 
-        braced!(braces_content in input);
-
         loop {
-            arms.push(braces_content.parse::<MatchArm>()?);
+            arms.push(input.parse::<MatchArm>()?);
 
-            if braces_content.is_empty() {
+            if input.is_empty() || Self::is_next_state_name(input) {
                 break;
             }
         }
@@ -53,9 +31,12 @@ impl State {
 
 impl Parse for State {
     fn parse(input: ParseStream) -> ParseResult<Self> {
+        let name = input.parse::<Ident>()?.to_string();
+
+        input.parse::<Token! { : }>()?;
+
         Ok(State {
-            name: input.parse::<Ident>()?.to_string(),
-            actions_on_enter: Self::parse_actions_on_enter(input)?,
+            name,
             arms: Self::parse_arms(input)?,
         })
     }
@@ -64,7 +45,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{MatchArmRhs, Pattern};
+    use crate::ast::{Directives, MatchArmRhs, Pattern};
 
     curry_parse_macros!($State);
 
@@ -72,14 +53,12 @@ mod tests {
     fn parse_simple() {
         assert_eq!(
             parse_ok! [
-                foo_state {
+                foo_state:
                     'a' => ( bar; --> baz_state )
                     _ => ( qux; quz; )
-                }
             ],
             State {
                 name: "foo_state".into(),
-                actions_on_enter: None,
                 arms: vec![
                     MatchArm {
                         pattern: Pattern::Byte(b'a'),
@@ -101,50 +80,15 @@ mod tests {
     }
 
     #[test]
-    fn parse_with_actions_on_enter() {
-        assert_eq!(
-            parse_ok! [
-                foo_state <-- ( bar; ) {
-                    _ => ( baz; )
-                }
-            ],
-            State {
-                name: "foo_state".into(),
-                actions_on_enter: Some(Directives {
-                    action_calls: vec![act!("bar")],
-                    state_transition: None
-                }),
-                arms: vec![MatchArm {
-                    pattern: Pattern::Any,
-                    rhs: MatchArmRhs::Directives(Directives {
-                        action_calls: vec![act!("baz")],
-                        state_transition: None
-                    })
-                }]
-            }
-        );
-    }
-
-    #[test]
     fn no_arms_error() {
         assert_eq!(
-            parse_err![foo_state {}],
+            parse_err![
+                foo_state:
+            ],
             concat![
                 "unexpected end of input, expected one of: character literal, integer literal, ",
                 "string literal, square brackets, identifier, `_`, `if`"
             ]
-        );
-    }
-
-    #[test]
-    fn state_transition_in_state_enter_directives_error() {
-        assert_eq!(
-            parse_err![
-                foo_state <-- ( --> bar_state) {
-                    _ => ( bax; )
-                }
-            ],
-            ERR_TRANSITION_IN_ENTER_ACTIONS
         );
     }
 }

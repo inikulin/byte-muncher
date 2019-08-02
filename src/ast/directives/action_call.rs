@@ -86,6 +86,39 @@ impl Parse for ActionCall {
     }
 }
 
+/*
+syntax!(Json = {
+    @initial:
+        '"' => --> content.
+        _   => error?.
+
+    content:
+        --> => <mark>(start).
+        '"' => --> end.
+
+    end:
+        _ => error?.
+});
+
+
+#[derive(Parser)]
+pub struct JsonParser(Json::ParsingContext);
+
+impl Json::StateMachine for StringParser {
+    fn context(&mut self) -> StringSm::Context {
+        self.0
+    }
+
+    fn string(&mut self, ) -> Result<String, Error> {
+        String::from_utf8(input[ctx.marker.start..ctx.marker.end])
+    }
+}
+*/
+
+
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
