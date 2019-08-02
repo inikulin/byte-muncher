@@ -30,6 +30,7 @@ impl Directives {
             self.state_transition = Some(state_transition);
         } else if input.peek(Ident) {
             self.action_calls.push(input.parse::<ActionCall>()?);
+            input.parse::<Token! { ; }>()?;
         } else {
             return Err(input.error(ERR_UNEXPECTED_ITEM));
         }
