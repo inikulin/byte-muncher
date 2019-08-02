@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn parse_directives() {
         assert_eq!(
-            parse_ok! { ( foo; bar; ) },
+            parse_ok! { foo, bar. },
             MatchArmRhs::Directives(Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: None
@@ -71,9 +71,9 @@ mod tests {
         assert_eq!(
             parse_ok! [
                 if cond {
-                    ( foo; bar; )
+                    foo, bar.
                 } else {
-                    ( baz; )
+                    baz.
                 }
             ],
             MatchArmRhs::Condition {
@@ -98,13 +98,13 @@ mod tests {
         assert_eq!(
             parse_ok! [
                 if cond1 {
-                    ( foo; )
+                    foo.
                 } else if cond2 {
-                    ( baz; )
+                    baz.
                 } else if cond3 {
-                    ( qux; )
+                    qux.
                 } else {
-                    ( quz; )
+                    quz.
                 }
             ],
             MatchArmRhs::Condition {
@@ -144,7 +144,7 @@ mod tests {
         assert_eq!(
             parse_err! [
                 if cond {
-                    ( foo; )
+                    foo.
                 }
             ],
             "unexpected end of input, expected `else`"
@@ -156,9 +156,9 @@ mod tests {
         assert_eq!(
             parse_err! [
                 if cond {
-                    ( foo; )
+                    foo.
                 } else {
-                    ( bar; ) 42
+                    bar. 42
                 }
             ],
             ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES

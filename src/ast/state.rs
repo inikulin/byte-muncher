@@ -2,6 +2,11 @@ use crate::ast::MatchArm;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
 
+// TODO
+// 1. as in transition
+// 2. --> arm
+// 3. @start @end actions
+
 #[derive(PartialEq, Debug)]
 pub struct State {
     pub name: String,
@@ -50,12 +55,12 @@ mod tests {
     curry_parse_macros!($State);
 
     #[test]
-    fn parse_simple() {
+    fn parse() {
         assert_eq!(
             parse_ok! [
                 foo_state:
-                    'a' => ( bar; --> baz_state )
-                    _ => ( qux; quz; )
+                    'a' => bar, --> baz_state.
+                    _   => qux, quz.
             ],
             State {
                 name: "foo_state".into(),

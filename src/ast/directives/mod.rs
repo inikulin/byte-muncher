@@ -1,20 +1,14 @@
 mod action_call;
 
 use syn::parse::{Parse, ParseStream};
-use syn::{parenthesized, Ident, Result as ParseResult, Token};
+use syn::{Ident, Result as ParseResult, Token};
 
 pub use self::action_call::ActionCall;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
-    "match arm directives should consist of zero or more semicolon-terminated action_calls with ",
+    "match arm directives should consist of zero or more colon-terminated action calls with ",
     "an optional trailing state transition (`--> {state}`)"
 ];
-
-const ERR_TRANSITION_IS_NOT_LAST_ENTRY: &str =
-    "state transition should be the last directive in a match arm";
-
-const ERR_SEMICOLON_TERMINATED_TRANSITION: &str =
-    "state transition don't need to be terminated by a semicolon";
 
 #[derive(Default, PartialEq, Debug)]
 pub struct Directives {
@@ -23,44 +17,47 @@ pub struct Directives {
 }
 
 impl Directives {
-    fn parse_item(&mut self, input: ParseStream) -> ParseResult<()> {
+    fn parse_action_call_terminator(input: ParseStream) -> ParseResult<bool> {
+        let lookahead = input.lookahead1();
+
+        if lookahead.peek(Token! { , }) {
+            input.parse::<Token! { , }>()?;
+            Ok(false)
+        } else if lookahead.peek(Token! { . }) {
+            input.parse::<Token! { . }>()?;
+            Ok(true)
+        } else {
+            Err(lookahead.error())
+        }
+    }
+
+    fn parse_item(&mut self, input: ParseStream) -> ParseResult<bool> {
         if parse3_if_present!(input, { - }, { - }, { > }) {
             let state_transition = input.parse::<Ident>()?.to_string();
 
             self.state_transition = Some(state_transition);
+            input.parse::<Token! { . }>()?;
+
+            Ok(true)
         } else if input.peek(Ident) {
             self.action_calls.push(input.parse::<ActionCall>()?);
-            input.parse::<Token! { ; }>()?;
+            Self::parse_action_call_terminator(input)
         } else {
-            return Err(input.error(ERR_UNEXPECTED_ITEM));
+            Err(input.error(ERR_UNEXPECTED_ITEM))
         }
-
-        Ok(())
     }
 }
 
 impl Parse for Directives {
     fn parse(input: ParseStream) -> ParseResult<Self> {
-        let items;
-        let mut list = Self::default();
+        let mut directives = Self::default();
 
-        parenthesized!(items in input);
-
-        while !items.is_empty() {
-            if list.state_transition.is_some() {
-                let msg = if items.peek(Token! { ; }) {
-                    ERR_SEMICOLON_TERMINATED_TRANSITION
-                } else {
-                    ERR_TRANSITION_IS_NOT_LAST_ENTRY
-                };
-
-                return Err(input.error(msg));
-            }
-
-            list.parse_item(&items)?;
+        // NOTE: check for empty list case before parsing directives
+        if !parse_if_present!(input, { . }) {
+            while !directives.parse_item(input)? {}
         }
 
-        Ok(list)
+        Ok(directives)
     }
 }
 
@@ -73,7 +70,7 @@ mod tests {
     #[test]
     fn parse_empty_list() {
         assert_eq!(
-            parse_ok! { () },
+            parse_ok! { . },
             Directives {
                 action_calls: vec![],
                 state_transition: None
@@ -84,7 +81,7 @@ mod tests {
     #[test]
     fn parse_action_calls() {
         assert_eq!(
-            parse_ok! { (foo; bar; baz;) },
+            parse_ok! { foo, bar, baz. },
             Directives {
                 action_calls: vec![act!("foo"), act!("bar"), act!("baz")],
                 state_transition: None
@@ -95,7 +92,7 @@ mod tests {
     #[test]
     fn parse_state_transition() {
         assert_eq!(
-            parse_ok! { ( foo; bar; --> baz_state ) },
+            parse_ok! { foo, bar, --> baz_state. },
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some("baz_state".into())
@@ -103,7 +100,7 @@ mod tests {
         );
 
         assert_eq!(
-            parse_ok! { ( --> foo_state ) },
+            parse_ok! { --> foo_state. },
             Directives {
                 action_calls: vec![],
                 state_transition: Some("foo_state".into())
@@ -113,19 +110,19 @@ mod tests {
 
     #[test]
     fn unexpected_item_error() {
-        assert_eq!(parse_err! { ( foo; 123; ) }, ERR_UNEXPECTED_ITEM);
-        assert_eq!(parse_err! { ( foo; -- bar ) }, ERR_UNEXPECTED_ITEM);
+        assert_eq!(parse_err! { foo, 123. }, ERR_UNEXPECTED_ITEM);
+        assert_eq!(parse_err! { foo, -- bar. }, ERR_UNEXPECTED_ITEM);
     }
 
     #[test]
     fn unterminated_action_error() {
-        assert_eq!(parse_err! { ( foo; baz bar; ) }, "expected `;`");
+        assert_eq!(parse_err! { foo, baz bar. }, "expected `,` or `.`");
     }
 
     #[test]
     fn transition_without_destination_state_error() {
         assert_eq!(
-            parse_err! { ( --> ) },
+            parse_err! { --> },
             "unexpected end of input, expected identifier"
         );
     }
@@ -133,35 +130,8 @@ mod tests {
     #[test]
     fn state_transition_is_not_last_entry_error() {
         assert_eq!(
-            parse_err! { ( foo; --> bar_state baz; ) },
-            format!(
-                "unexpected end of input, {}",
-                ERR_TRANSITION_IS_NOT_LAST_ENTRY
-            )
+            parse_err! { foo, --> bar_state, baz. },
+            format!("expected `.`")
         );
-
-        assert_eq!(
-            parse_err! { ( foo; --> bar_state --> baz_state; ) },
-            format!(
-                "unexpected end of input, {}",
-                ERR_TRANSITION_IS_NOT_LAST_ENTRY
-            )
-        );
-    }
-
-    #[test]
-    fn semicolon_terminated_transition_error() {
-        assert_eq!(
-            parse_err! { ( foo; --> bar_state; ) },
-            format!(
-                "unexpected end of input, {}",
-                ERR_SEMICOLON_TERMINATED_TRANSITION
-            )
-        );
-    }
-
-    #[test]
-    fn unexpected_token_error() {
-        assert_eq!(parse_err! { [foo;] }, "expected parentheses");
     }
 }

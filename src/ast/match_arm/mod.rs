@@ -37,7 +37,7 @@ mod tests {
     #[test]
     fn parse_match_arm() {
         assert_eq!(
-            parse_ok! { 'a' => ( foo; --> baz_state ) },
+            parse_ok! { 'a' => foo, --> baz_state. },
             MatchArm {
                 pattern: Pattern::Byte(b'a'),
                 rhs: MatchArmRhs::Directives(Directives {
@@ -48,7 +48,7 @@ mod tests {
         );
 
         assert_eq!(
-            parse_ok! { alpha => ( foo; bar; baz(42)?; ) },
+            parse_ok! { alpha => foo, bar, baz(42)?. },
             MatchArm {
                 pattern: Pattern::Set(SetPattern::Alpha),
                 rhs: MatchArmRhs::Directives(Directives {
@@ -69,9 +69,9 @@ mod tests {
         assert_eq!(
             parse_ok! [
                 'z' => if cond {
-                    ( foo; )
+                    foo.
                 } else {
-                    ( bar; )
+                    bar.
                 }
             ],
             MatchArm {
@@ -96,6 +96,6 @@ mod tests {
 
     #[test]
     fn invalid_connector_token_error() {
-        assert_eq!(parse_err! { "foo"|i =< ( bar; ) }, "expected `=>`");
+        assert_eq!(parse_err! { "foo"|i =< bar. }, "expected `=>`");
     }
 }

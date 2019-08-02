@@ -47,7 +47,7 @@ mod tests {
         assert_eq!(
             parse_ok! [
                 cond {
-                    ( foo; --> bar_state )
+                    foo, --> bar_state.
                 }
             ],
             ConditionBranch {
@@ -65,7 +65,7 @@ mod tests {
         assert_eq!(
             parse_err! [
                 some_condition {
-                    ( foo; bar; ) ( baz; )
+                    foo, bar. baz.
                 }
             ],
             ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES
