@@ -1,0 +1,141 @@
+use crate::ast::State;
+use syn::parse::{Parse, ParseStream};
+use syn::{braced, Ident, Result as ParseResult, Token};
+
+#[derive(PartialEq, Debug)]
+pub struct Grammar {
+    pub name: String,
+    pub states: Vec<State>,
+}
+
+impl Parse for Grammar {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let braces_content;
+        let mut states = vec![];
+        let name = input.parse::<Ident>()?.to_string();
+
+        input.parse::<Token! { = }>()?;
+
+        braced!(braces_content in input);
+
+        loop {
+            states.push(braces_content.parse::<State>()?);
+
+            if braces_content.is_empty() {
+                break;
+            }
+        }
+
+        Ok(Grammar { name, states })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast::{
+        Directives, InputStatePattern, MatchArm, MatchArmRhs, Pattern, StateTransition,
+    };
+
+    curry_parse_macros!($Grammar);
+
+    #[test]
+    fn parse() {
+        assert_eq!(
+            parse_ok! [
+                TestGrammar = {
+                    foo_state:
+                        'a' => bar, --> baz_state.
+                        _   => qux, quz, as in qux_state.
+
+                    baz_state:
+                        eof => qux.
+                        _ => --> qux_state.
+
+                    qux_state:
+                        --> => qux, quz.
+                        _ => quz.
+                }
+            ],
+            Grammar {
+                name: "TestGrammar".into(),
+                states: vec![
+                    State {
+                        name: "foo_state".into(),
+                        arms: vec![
+                            MatchArm {
+                                pattern: Pattern::Byte(b'a'),
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![act!("bar")],
+                                    state_transition: Some(StateTransition {
+                                        to_state: "baz_state".into(),
+                                        reconsume: false
+                                    })
+                                })
+                            },
+                            MatchArm {
+                                pattern: Pattern::Any,
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![act!("qux"), act!("quz")],
+                                    state_transition: Some(StateTransition {
+                                        to_state: "qux_state".into(),
+                                        reconsume: true
+                                    })
+                                })
+                            }
+                        ]
+                    },
+                    State {
+                        name: "baz_state".into(),
+                        arms: vec![
+                            MatchArm {
+                                pattern: Pattern::InputState(InputStatePattern::Eof),
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![act!("qux")],
+                                    state_transition: None
+                                })
+                            },
+                            MatchArm {
+                                pattern: Pattern::Any,
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![],
+                                    state_transition: Some(StateTransition {
+                                        to_state: "qux_state".into(),
+                                        reconsume: false
+                                    })
+                                })
+                            }
+                        ]
+                    },
+                    State {
+                        name: "qux_state".into(),
+                        arms: vec![
+                            MatchArm {
+                                pattern: Pattern::StateEnter,
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![act!("qux"), act!("quz")],
+                                    state_transition: None
+                                })
+                            },
+                            MatchArm {
+                                pattern: Pattern::Any,
+                                rhs: MatchArmRhs::Directives(Directives {
+                                    action_calls: vec![act!("quz")],
+                                    state_transition: None
+                                })
+                            }
+                        ]
+                    }
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn empty_grammar_error() {
+        assert_eq!(
+            parse_err![FooGrammar = {}],
+            "unexpected end of input, expected identifier"
+        );
+    }
+}
