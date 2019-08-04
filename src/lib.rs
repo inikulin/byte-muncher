@@ -2,7 +2,6 @@ mod ast;
 
 // TODO
 // v0.1.0
-// 2. @start @end actions
 // 3. Grammar
 // 4. Generate SM streaming
 // 5. cool_thing POC
