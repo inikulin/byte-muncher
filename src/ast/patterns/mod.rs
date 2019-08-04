@@ -27,6 +27,7 @@ pub enum InputStatePattern {
 
 #[derive(Debug, PartialEq)]
 pub enum Pattern {
+    StateEnter,
     Byte(u8),
     Sequence(SequencePattern),
     Set(SetPattern),
@@ -70,7 +71,9 @@ impl Parse for Pattern {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         let lookahead = input.lookahead1();
 
-        if lookahead.peek(LitChar) || lookahead.peek(LitInt) {
+        if parse3_if_present!(input, { - }, { - }, { > }) {
+            Ok(Pattern::StateEnter)
+        } else if lookahead.peek(LitChar) || lookahead.peek(LitInt) {
             Ok(Pattern::Byte(input.parse::<BytePattern>()?.0))
         } else if lookahead.peek(LitStr) || lookahead.peek(Bracket) {
             Ok(Pattern::Sequence(input.parse::<SequencePattern>()?))
@@ -155,6 +158,11 @@ mod tests {
     #[test]
     fn parse_any_pattern() {
         assert_eq!(parse_ok! { _ }, Pattern::Any);
+    }
+
+    #[test]
+    fn parse_state_enter_pattern() {
+        assert_eq!(parse_ok! { --> }, Pattern::StateEnter);
     }
 
     #[test]

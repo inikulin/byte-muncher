@@ -2,10 +2,6 @@ use crate::ast::MatchArm;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
 
-// TODO
-// 2. --> arm
-// 3. @start @end actions
-
 #[derive(PartialEq, Debug)]
 pub struct State {
     pub name: String,
