@@ -1,7 +1,8 @@
+mod compile;
 mod parse;
 
 #[derive(Debug, PartialEq)]
-pub enum SetPattern {
+pub enum AliasPattern {
     Alpha,
     AlphaLower,
     AlphaUpper,
@@ -23,11 +24,11 @@ pub struct SequencePattern {
 
 #[derive(Debug, PartialEq)]
 pub enum Pattern {
-    StateEnter,
     Byte(u8),
-    Sequence(SequencePattern),
-    Set(SetPattern),
-    InputState(InputStatePattern),
+    Alias(AliasPattern),
     Condition(String),
     Any,
+    StateEnter,
+    Sequence(SequencePattern),
+    InputState(InputStatePattern),
 }

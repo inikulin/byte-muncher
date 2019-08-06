@@ -12,9 +12,9 @@ const ERR_UNKNOWN_PATTERN: &str = "unknown pattern";
 
 impl Pattern {
     fn parse_from_ident(input: ParseStream) -> ParseResult<Self> {
-        macro_rules! set_pat {
+        macro_rules! alias {
             ($Type:ident) => {
-                Ok(Pattern::Set(SetPattern::$Type))
+                Ok(Pattern::Alias(AliasPattern::$Type))
             };
         }
 
@@ -27,11 +27,11 @@ impl Pattern {
         let ident = input.parse::<Ident>()?;
 
         match ident.to_string().as_str() {
-            "alpha" => set_pat!(Alpha),
-            "alpha_lo" => set_pat!(AlphaLower),
-            "alpha_up" => set_pat!(AlphaUpper),
-            "digit" => set_pat!(Digit),
-            "ws" => set_pat!(Whitespace),
+            "alpha" => alias!(Alpha),
+            "alpha_lo" => alias!(AlphaLower),
+            "alpha_up" => alias!(AlphaUpper),
+            "digit" => alias!(Digit),
+            "ws" => alias!(Whitespace),
 
             "eoc" => input_state_pat!(Eoc),
             "eof" => input_state_pat!(Eof),
@@ -99,12 +99,12 @@ mod tests {
     }
 
     #[test]
-    fn parse_set_pattern() {
-        assert_eq!(parse_ok! { alpha }, Pattern::Set(SetPattern::Alpha));
-        assert_eq!(parse_ok! { alpha_lo }, Pattern::Set(SetPattern::AlphaLower));
-        assert_eq!(parse_ok! { alpha_up }, Pattern::Set(SetPattern::AlphaUpper));
-        assert_eq!(parse_ok! { digit }, Pattern::Set(SetPattern::Digit));
-        assert_eq!(parse_ok! { ws }, Pattern::Set(SetPattern::Whitespace));
+    fn parse_alias_pattern() {
+        assert_eq!(parse_ok! { alpha }, Pattern::Alias(AliasPattern::Alpha));
+        assert_eq!(parse_ok! { alpha_lo }, Pattern::Alias(AliasPattern::AlphaLower));
+        assert_eq!(parse_ok! { alpha_up }, Pattern::Alias(AliasPattern::AlphaUpper));
+        assert_eq!(parse_ok! { digit }, Pattern::Alias(AliasPattern::Digit));
+        assert_eq!(parse_ok! { ws }, Pattern::Alias(AliasPattern::Whitespace));
     }
 
     #[test]
