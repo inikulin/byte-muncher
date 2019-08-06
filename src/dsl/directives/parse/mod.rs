@@ -2,25 +2,12 @@ mod action_call;
 
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
-
-pub use self::action_call::ActionCall;
+use super::*;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
     "match arm directives should consist of zero or more colon-terminated action calls with ",
     "an optional trailing state transition (`--> {state}`)"
 ];
-
-#[derive(PartialEq, Debug)]
-pub struct StateTransition {
-    pub to_state: String,
-    pub reconsume: bool,
-}
-
-#[derive(Default, PartialEq, Debug)]
-pub struct Directives {
-    pub action_calls: Vec<ActionCall>,
-    pub state_transition: Option<StateTransition>,
-}
 
 impl Directives {
     fn parse_action_call_terminator(input: ParseStream) -> ParseResult<bool> {
@@ -84,7 +71,7 @@ impl Parse for Directives {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::StateTransition;
+    use crate::dsl::StateTransition;
 
     curry_parse_macros!($Directives);
 

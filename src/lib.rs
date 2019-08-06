@@ -1,11 +1,11 @@
-mod ast;
+mod dsl;
 
 // TODO
 // v0.1.0
-// 3. Grammar
 // 4. Initial state
 // 5. Generate SM streaming
-// 6. cool_thing POC
+// 6. module system
+// 7. cool_thing POC
 
 // v0.2.0
 // 1. Range pattern and pattern OR (|)

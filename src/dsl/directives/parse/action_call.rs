@@ -1,6 +1,7 @@
 use syn::parse::{Parse, ParseStream};
 use syn::token::Paren;
 use syn::{parenthesized, Error as ParseError, Ident, Lit, Result as ParseResult, Token};
+use super::*;
 
 const ERR_EMPTY_ARGS: &str = concat![
     "expected at least one action argument (action calls ",
@@ -9,17 +10,6 @@ const ERR_EMPTY_ARGS: &str = concat![
 
 const ERR_TOO_MANY_ARGS: &str = "too many arguments";
 const ERR_UNKNOWN_BUILT_IN: &str = "unknown built-in directive";
-
-#[derive(Debug, PartialEq)]
-pub enum ActionCall {
-    UserDefined {
-        name: String,
-        args: Vec<Lit>,
-        with_error_check: bool,
-    },
-    Start(String),
-    End(String),
-}
 
 impl ActionCall {
     fn parse_args(input: ParseStream) -> ParseResult<Vec<Lit>> {

@@ -1,12 +1,6 @@
-use crate::ast::State;
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult, Token};
-
-#[derive(PartialEq, Debug)]
-pub struct Grammar {
-    pub name: String,
-    pub states: Vec<State>,
-}
 
 impl Parse for Grammar {
     fn parse(input: ParseStream) -> ParseResult<Self> {
@@ -33,7 +27,7 @@ impl Parse for Grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{
+    use crate::dsl::{
         Directives, InputStatePattern, MatchArm, MatchArmRhs, Pattern, StateTransition,
     };
 

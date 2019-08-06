@@ -1,7 +1,7 @@
-use super::byte::BytePattern;
 use syn::parse::{Parse, ParseStream};
 use syn::token::Bracket;
 use syn::{bracketed, Error as ParseError, Ident, LitStr, Result as ParseResult, Token};
+use super::*;
 
 const ERR_STR_IS_NOT_ASCII: &str = concat![
     "characters in string sequence pattern should be in the ASCII range.",
@@ -10,12 +10,6 @@ const ERR_STR_IS_NOT_ASCII: &str = concat![
 
 const ERR_UNSUPPORTED_FLAG: &str =
     "unsupported sequence flag. Only ignore case flag (`i`) is currently supported";
-
-#[derive(PartialEq, Debug)]
-pub struct SequencePattern {
-    pub bytes: Vec<u8>,
-    pub ignore_case: bool,
-}
 
 impl SequencePattern {
     fn parse_ignore_case_flag(input: ParseStream) -> ParseResult<bool> {
@@ -83,7 +77,7 @@ impl Parse for SequencePattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::patterns::byte::{ERR_CHAR_IS_NOT_ASCII, ERR_INT_IS_OUT_OF_BOUNDS};
+    use crate::dsl::patterns::parse::byte::{ERR_CHAR_IS_NOT_ASCII, ERR_INT_IS_OUT_OF_BOUNDS};
 
     curry_parse_macros!($SequencePattern);
 

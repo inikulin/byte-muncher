@@ -1,18 +1,9 @@
 mod condition_branch;
 mod rhs;
 
-use super::patterns::Pattern;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
-
-pub use self::condition_branch::ConditionBranch;
-pub use self::rhs::MatchArmRhs;
-
-#[derive(PartialEq, Debug)]
-pub struct MatchArm {
-    pub pattern: Pattern,
-    pub rhs: MatchArmRhs,
-}
+use super::*;
 
 impl Parse for MatchArm {
     fn parse(input: ParseStream) -> ParseResult<Self> {
@@ -30,7 +21,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{ActionCall, ConditionBranch, Directives, SetPattern, StateTransition};
+    use crate::dsl::{ActionCall, ConditionBranch, Directives, SetPattern, StateTransition};
 
     curry_parse_macros!($MatchArm);
 

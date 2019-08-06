@@ -5,36 +5,10 @@ use syn::parse::{Parse, ParseStream};
 use syn::token::Bracket;
 use syn::{Error as ParseError, Ident, LitChar, LitInt, LitStr, Result as ParseResult, Token};
 
-pub use self::byte::BytePattern;
-pub use self::sequence::SequencePattern;
+use self::byte::BytePattern;
+use super::*;
 
 const ERR_UNKNOWN_PATTERN: &str = "unknown pattern";
-
-#[derive(Debug, PartialEq)]
-pub enum SetPattern {
-    Alpha,
-    AlphaLower,
-    AlphaUpper,
-    Digit,
-    Whitespace,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum InputStatePattern {
-    Eoc,
-    Eof,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Pattern {
-    StateEnter,
-    Byte(u8),
-    Sequence(SequencePattern),
-    Set(SetPattern),
-    InputState(InputStatePattern),
-    Condition(String),
-    Any,
-}
 
 impl Pattern {
     fn parse_from_ident(input: ParseStream) -> ParseResult<Self> {

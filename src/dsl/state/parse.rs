@@ -1,12 +1,7 @@
-use crate::ast::MatchArm;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
+use super::*;
 
-#[derive(PartialEq, Debug)]
-pub struct State {
-    pub name: String,
-    pub arms: Vec<MatchArm>,
-}
 
 impl State {
     #[inline]
@@ -45,7 +40,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{Directives, MatchArmRhs, Pattern, StateTransition};
+    use crate::dsl::{Directives, MatchArmRhs, Pattern, StateTransition};
 
     curry_parse_macros!($State);
 

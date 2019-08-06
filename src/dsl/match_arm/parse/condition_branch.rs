@@ -1,15 +1,10 @@
-use crate::ast::Directives;
 use syn::parse::{Parse, ParseStream};
 use syn::{braced, Ident, Result as ParseResult};
+use super::*;
 
 pub(super) const ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES: &str =
     "condition branch shouldn't contain anything besides a single directive list";
 
-#[derive(PartialEq, Debug)]
-pub struct ConditionBranch {
-    pub condition: String,
-    pub directives: Directives,
-}
 
 impl ConditionBranch {
     pub fn parse_braced_directives(input: ParseStream) -> ParseResult<Directives> {
@@ -39,7 +34,7 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::StateTransition;
+    use crate::dsl::StateTransition;
 
     curry_parse_macros!($ConditionBranch);
 

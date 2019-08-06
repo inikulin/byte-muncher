@@ -1,17 +1,6 @@
-use super::condition_branch::ConditionBranch;
-use crate::ast::Directives;
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
-
-#[derive(PartialEq, Debug)]
-pub enum MatchArmRhs {
-    Directives(Directives),
-    Condition {
-        if_branch: ConditionBranch,
-        else_if_branches: Vec<ConditionBranch>,
-        else_branch: Directives,
-    },
-}
 
 impl MatchArmRhs {
     fn parse_condition(input: ParseStream) -> ParseResult<Self> {
@@ -50,8 +39,8 @@ impl Parse for MatchArmRhs {
 
 #[cfg(test)]
 mod tests {
+    use super::condition_branch::ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES;
     use super::*;
-    use crate::ast::match_arm::condition_branch::ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES;
 
     curry_parse_macros!($MatchArmRhs);
 
