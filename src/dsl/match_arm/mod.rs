@@ -1,4 +1,5 @@
 mod parse;
+mod compile;
 
 use crate::dsl::{Directives, Pattern};
 

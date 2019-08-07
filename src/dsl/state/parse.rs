@@ -1,7 +1,6 @@
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
-use super::*;
-
 
 impl State {
     #[inline]
@@ -47,11 +46,11 @@ mod tests {
     #[test]
     fn parse() {
         assert_eq!(
-            parse_ok! [
+            parse_ok! {
                 foo_state:
                     'a' => bar, --> baz_state.
                     _   => qux, quz, as in qux_state.
-            ],
+            },
             State {
                 name: "foo_state".into(),
                 arms: vec![

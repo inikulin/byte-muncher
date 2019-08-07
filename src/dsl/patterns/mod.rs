@@ -1,6 +1,6 @@
 mod parse;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ClassPattern {
     Alnum,
     Alpha,

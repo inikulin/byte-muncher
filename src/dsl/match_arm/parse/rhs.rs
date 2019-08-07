@@ -58,13 +58,13 @@ mod tests {
     #[test]
     fn parse_simple_condition() {
         assert_eq!(
-            parse_ok! [
+            parse_ok! {
                 if cond {
                     foo, bar.
                 } else {
                     baz.
                 }
-            ],
+            },
             MatchArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond".into(),
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn parse_else_if_condition() {
         assert_eq!(
-            parse_ok! [
+            parse_ok! {
                 if cond1 {
                     foo.
                 } else if cond2 {
@@ -95,7 +95,7 @@ mod tests {
                 } else {
                     quz.
                 }
-            ],
+            },
             MatchArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond1".into(),
@@ -131,11 +131,11 @@ mod tests {
     #[test]
     fn missing_else_in_condition_error() {
         assert_eq!(
-            parse_err! [
+            parse_err! {
                 if cond {
                     foo.
                 }
-            ],
+            },
             "unexpected end of input, expected `else`"
         );
     }
@@ -143,13 +143,13 @@ mod tests {
     #[test]
     fn unexpected_content_after_directives_in_else_branch_error() {
         assert_eq!(
-            parse_err! [
+            parse_err! {
                 if cond {
                     foo.
                 } else {
                     bar. 42
                 }
-            ],
+            },
             ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES
         );
     }

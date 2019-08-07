@@ -1,9 +1,9 @@
 mod condition_branch;
 mod rhs;
 
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
-use super::*;
 
 impl Parse for MatchArm {
     fn parse(input: ParseStream) -> ParseResult<Self> {
@@ -21,7 +21,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{ActionCall, ConditionBranch, Directives, ClassPattern, StateTransition};
+    use crate::dsl::{ActionCall, ClassPattern, ConditionBranch, Directives, StateTransition};
 
     curry_parse_macros!($MatchArm);
 
@@ -61,13 +61,13 @@ mod tests {
         );
 
         assert_eq!(
-            parse_ok! [
+            parse_ok! {
                 'z' => if cond {
                     foo.
                 } else {
                     bar.
                 }
-            ],
+            },
             MatchArm {
                 pattern: Pattern::Byte(b'z'),
                 rhs: MatchArmRhs::Condition {

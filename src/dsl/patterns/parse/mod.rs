@@ -7,40 +7,53 @@ use syn::{Error as ParseError, Ident, LitChar, LitInt, LitStr, Result as ParseRe
 
 use self::byte::BytePattern;
 use super::*;
+use std::str::FromStr;
 
 const ERR_UNKNOWN_PATTERN: &str = "unknown pattern";
 
+impl FromStr for ClassPattern {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use ClassPattern::*;
+
+        match s {
+            "alnum" => Ok(Alnum),
+            "alpha" => Ok(Alpha),
+            "ascii" => Ok(Ascii),
+            "lower" => Ok(Lower),
+            "upper" => Ok(Upper),
+            "digit" => Ok(Digit),
+            "xdigit" => Ok(Xdigit),
+            "space" => Ok(Space),
+            _ => Err(()),
+        }
+    }
+}
+
+impl FromStr for InputStatePattern {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use InputStatePattern::*;
+
+        match s {
+            "eoc" => Ok(Eoc),
+            "eof" => Ok(Eof),
+            _ => Err(()),
+        }
+    }
+}
+
 impl Pattern {
     fn parse_from_ident(input: ParseStream) -> ParseResult<Self> {
-        macro_rules! class {
-            ($Type:ident) => {
-                Ok(Pattern::Class(ClassPattern::$Type))
-            };
-        }
-
-        macro_rules! input_state_pat {
-            ($Type:ident) => {
-                Ok(Pattern::InputState(InputStatePattern::$Type))
-            };
-        }
-
         let ident = input.parse::<Ident>()?;
+        let s = ident.to_string();
 
-        match ident.to_string().as_str() {
-            "alnum" => class!(Alnum),
-            "alpha" => class!(Alpha),
-            "ascii" => class!(Ascii),
-            "lower" => class!(Lower),
-            "upper" => class!(Upper),
-            "digit" => class!(Digit),
-            "xdigit" => class!(Xdigit),
-            "space" => class!(Space),
-
-            "eoc" => input_state_pat!(Eoc),
-            "eof" => input_state_pat!(Eof),
-
-            _ => Err(ParseError::new_spanned(ident, ERR_UNKNOWN_PATTERN)),
-        }
+        s.parse::<ClassPattern>()
+            .map(Pattern::Class)
+            .or_else(|_| s.parse::<InputStatePattern>().map(Pattern::InputState))
+            .map_err(|_| ParseError::new_spanned(ident, ERR_UNKNOWN_PATTERN))
     }
 }
 

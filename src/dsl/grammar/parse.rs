@@ -36,7 +36,7 @@ mod tests {
     #[test]
     fn parse() {
         assert_eq!(
-            parse_ok! [
+            parse_ok! {
                 TestGrammar = {
                     foo_state:
                         'a' => bar, --> baz_state.
@@ -50,7 +50,7 @@ mod tests {
                         --> => qux, quz.
                         _ => quz.
                 }
-            ],
+            },
             Grammar {
                 name: "TestGrammar".into(),
                 states: vec![

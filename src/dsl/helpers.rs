@@ -55,22 +55,10 @@ mod test_utils {
                 };
             }
 
+            #[allow(unused_macros)]
             macro_rules! parse_err {
                 ($d ($d t:tt)*) => {
                     format!("{}", parse!($d ($d t)*).unwrap_err())
-                };
-            }
-        };
-    }
-
-    macro_rules! curry_compile_macro {
-        ($d:tt $AstNode:ident) => {
-            macro_rules! compile {
-                ( $d ($d t:tt)* ) => {
-                    syn::parse_str::<$AstNode>(stringify!($d ($d t)*))
-                        .expect("compilation failed")
-                        .compile()
-                        .to_string()
                 };
             }
         };
