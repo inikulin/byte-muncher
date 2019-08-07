@@ -1,13 +1,15 @@
-mod compile;
 mod parse;
 
 #[derive(Debug, PartialEq)]
-pub enum AliasPattern {
+pub enum ClassPattern {
+    Alnum,
     Alpha,
-    AlphaLower,
-    AlphaUpper,
+    Ascii,
+    Lower,
+    Upper,
     Digit,
-    Whitespace,
+    Xdigit,
+    Space,
 }
 
 #[derive(Debug, PartialEq)]
@@ -25,7 +27,7 @@ pub struct SequencePattern {
 #[derive(Debug, PartialEq)]
 pub enum Pattern {
     Byte(u8),
-    Alias(AliasPattern),
+    Class(ClassPattern),
     Condition(String),
     Any,
     StateEnter,

@@ -12,9 +12,9 @@ const ERR_UNKNOWN_PATTERN: &str = "unknown pattern";
 
 impl Pattern {
     fn parse_from_ident(input: ParseStream) -> ParseResult<Self> {
-        macro_rules! alias {
+        macro_rules! class {
             ($Type:ident) => {
-                Ok(Pattern::Alias(AliasPattern::$Type))
+                Ok(Pattern::Class(ClassPattern::$Type))
             };
         }
 
@@ -27,11 +27,14 @@ impl Pattern {
         let ident = input.parse::<Ident>()?;
 
         match ident.to_string().as_str() {
-            "alpha" => alias!(Alpha),
-            "alpha_lo" => alias!(AlphaLower),
-            "alpha_up" => alias!(AlphaUpper),
-            "digit" => alias!(Digit),
-            "ws" => alias!(Whitespace),
+            "alnum" => class!(Alnum),
+            "alpha" => class!(Alpha),
+            "ascii" => class!(Ascii),
+            "lower" => class!(Lower),
+            "upper" => class!(Upper),
+            "digit" => class!(Digit),
+            "xdigit" => class!(Xdigit),
+            "space" => class!(Space),
 
             "eoc" => input_state_pat!(Eoc),
             "eof" => input_state_pat!(Eof),
@@ -99,12 +102,15 @@ mod tests {
     }
 
     #[test]
-    fn parse_alias_pattern() {
-        assert_eq!(parse_ok! { alpha }, Pattern::Alias(AliasPattern::Alpha));
-        assert_eq!(parse_ok! { alpha_lo }, Pattern::Alias(AliasPattern::AlphaLower));
-        assert_eq!(parse_ok! { alpha_up }, Pattern::Alias(AliasPattern::AlphaUpper));
-        assert_eq!(parse_ok! { digit }, Pattern::Alias(AliasPattern::Digit));
-        assert_eq!(parse_ok! { ws }, Pattern::Alias(AliasPattern::Whitespace));
+    fn parse_class_pattern() {
+        assert_eq!(parse_ok! { alnum }, Pattern::Class(ClassPattern::Alnum));
+        assert_eq!(parse_ok! { alpha }, Pattern::Class(ClassPattern::Alpha));
+        assert_eq!(parse_ok! { ascii }, Pattern::Class(ClassPattern::Ascii));
+        assert_eq!(parse_ok! { lower }, Pattern::Class(ClassPattern::Lower));
+        assert_eq!(parse_ok! { upper }, Pattern::Class(ClassPattern::Upper));
+        assert_eq!(parse_ok! { digit }, Pattern::Class(ClassPattern::Digit));
+        assert_eq!(parse_ok! { xdigit }, Pattern::Class(ClassPattern::Xdigit));
+        assert_eq!(parse_ok! { space }, Pattern::Class(ClassPattern::Space));
     }
 
     #[test]

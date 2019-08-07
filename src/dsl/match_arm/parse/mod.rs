@@ -21,7 +21,7 @@ impl Parse for MatchArm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{ActionCall, ConditionBranch, Directives, AliasPattern, StateTransition};
+    use crate::dsl::{ActionCall, ConditionBranch, Directives, ClassPattern, StateTransition};
 
     curry_parse_macros!($MatchArm);
 
@@ -44,7 +44,7 @@ mod tests {
         assert_eq!(
             parse_ok! { alpha => foo, bar, baz(42)?. },
             MatchArm {
-                pattern: Pattern::Alias(AliasPattern::Alpha),
+                pattern: Pattern::Class(ClassPattern::Alpha),
                 rhs: MatchArmRhs::Directives(Directives {
                     action_calls: vec![
                         act!("foo"),
