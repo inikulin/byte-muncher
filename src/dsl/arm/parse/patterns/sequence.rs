@@ -11,23 +11,23 @@ const ERR_STR_IS_NOT_ASCII: &str = concat![
 const ERR_UNSUPPORTED_FLAG: &str =
     "unsupported sequence flag. Only ignore case flag (`i`) is currently supported";
 
-impl SequencePattern {
-    fn parse_ignore_case_flag(input: ParseStream) -> ParseResult<bool> {
-        if input.lookahead1().peek(Token! { | }) {
-            input.parse::<Token! { | }>()?;
+fn parse_ignore_case_flag(input: ParseStream) -> ParseResult<bool> {
+    if input.lookahead1().peek(Token! { | }) {
+        input.parse::<Token! { | }>()?;
 
-            let flag = input.parse::<Ident>()?;
+        let flag = input.parse::<Ident>()?;
 
-            if flag.to_string() == "i" {
-                Ok(true)
-            } else {
-                Err(ParseError::new_spanned(flag, ERR_UNSUPPORTED_FLAG))
-            }
+        if flag.to_string() == "i" {
+            Ok(true)
         } else {
-            Ok(false)
+            Err(ParseError::new_spanned(flag, ERR_UNSUPPORTED_FLAG))
         }
+    } else {
+        Ok(false)
     }
+}
 
+impl SequencePattern {
     fn parse_from_str_literal(input: ParseStream) -> ParseResult<Self> {
         let lit = input.parse::<LitStr>()?;
         let string = lit.value();
@@ -35,7 +35,7 @@ impl SequencePattern {
         if string.is_ascii() {
             Ok(SequencePattern {
                 bytes: string.into_bytes(),
-                ignore_case: Self::parse_ignore_case_flag(input)?,
+                ignore_case: parse_ignore_case_flag(input)?,
             })
         } else {
             Err(ParseError::new_spanned(lit, ERR_STR_IS_NOT_ASCII))
@@ -55,7 +55,7 @@ impl SequencePattern {
 
         Ok(SequencePattern {
             bytes,
-            ignore_case: Self::parse_ignore_case_flag(input)?,
+            ignore_case: parse_ignore_case_flag(input)?,
         })
     }
 }

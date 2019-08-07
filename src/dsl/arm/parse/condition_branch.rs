@@ -5,19 +5,17 @@ use syn::{braced, Ident, Result as ParseResult};
 pub(super) const ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES: &str =
     "condition branch shouldn't contain anything besides a single directive list";
 
-impl ConditionBranch {
-    pub fn parse_braced_directives(input: ParseStream) -> ParseResult<Directives> {
-        let braces_content;
+pub fn parse_braced_directives(input: ParseStream) -> ParseResult<Directives> {
+    let braces_content;
 
-        braced!(braces_content in input);
+    braced!(braces_content in input);
 
-        let actions = braces_content.parse::<Directives>()?;
+    let actions = braces_content.parse::<Directives>()?;
 
-        if braces_content.is_empty() {
-            Ok(actions)
-        } else {
-            Err(braces_content.error(ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES))
-        }
+    if braces_content.is_empty() {
+        Ok(actions)
+    } else {
+        Err(braces_content.error(ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES))
     }
 }
 
@@ -25,7 +23,7 @@ impl Parse for ConditionBranch {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         Ok(ConditionBranch {
             condition: input.parse::<Ident>()?.to_string(),
-            directives: Self::parse_braced_directives(input)?,
+            directives: parse_braced_directives(input)?,
         })
     }
 }

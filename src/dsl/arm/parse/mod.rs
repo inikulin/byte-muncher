@@ -1,6 +1,6 @@
 mod condition_branch;
-mod rhs;
 mod patterns;
+mod rhs;
 
 use super::*;
 use syn::parse::{Parse, ParseStream};

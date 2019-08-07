@@ -1,3 +1,4 @@
+use super::condition_branch::parse_braced_directives;
 use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
@@ -20,7 +21,7 @@ impl ArmRhs {
         Ok(ArmRhs::Condition {
             if_branch,
             else_if_branches,
-            else_branch: ConditionBranch::parse_braced_directives(input)?,
+            else_branch: parse_braced_directives(input)?,
         })
     }
 }
@@ -30,9 +31,7 @@ impl Parse for ArmRhs {
         if parse_if_present!(input, { if }) {
             Self::parse_condition(input)
         } else {
-            let directives = input.parse::<Directives>()?;
-
-            Ok(ArmRhs::Directives(directives))
+            input.parse::<Directives>().map(ArmRhs::Directives)
         }
     }
 }

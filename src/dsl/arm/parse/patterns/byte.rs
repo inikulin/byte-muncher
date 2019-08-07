@@ -28,10 +28,9 @@ impl BytePattern {
     fn parse_from_int_literal(input: ParseStream) -> ParseResult<Self> {
         let lit = input.parse::<LitInt>()?;
 
-        match u8::try_from(lit.value()) {
-            Ok(byte) => Ok(BytePattern(byte)),
-            Err(_) => Err(ParseError::new_spanned(lit, ERR_INT_IS_OUT_OF_BOUNDS)),
-        }
+        u8::try_from(lit.value())
+            .map(BytePattern)
+            .map_err(|_| ParseError::new_spanned(lit, ERR_INT_IS_OUT_OF_BOUNDS))
     }
 }
 

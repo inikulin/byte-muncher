@@ -1,29 +1,29 @@
 mod action_call;
 
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
-use super::*;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
     "arm directives should consist of zero or more colon-terminated action calls with ",
     "an optional trailing state transition (`--> {state}`)"
 ];
 
-impl Directives {
-    fn parse_action_call_terminator(input: ParseStream) -> ParseResult<bool> {
-        let lookahead = input.lookahead1();
+fn parse_action_call_terminator(input: ParseStream) -> ParseResult<bool> {
+    let lookahead = input.lookahead1();
 
-        if lookahead.peek(Token! { , }) {
-            input.parse::<Token! { , }>()?;
-            Ok(false)
-        } else if lookahead.peek(Token! { . }) {
-            input.parse::<Token! { . }>()?;
-            Ok(true)
-        } else {
-            Err(lookahead.error())
-        }
+    if lookahead.peek(Token! { , }) {
+        input.parse::<Token! { , }>()?;
+        Ok(false)
+    } else if lookahead.peek(Token! { . }) {
+        input.parse::<Token! { . }>()?;
+        Ok(true)
+    } else {
+        Err(lookahead.error())
     }
+}
 
+impl Directives {
     fn parse_state_transition_destination(
         &mut self,
         input: ParseStream,
@@ -48,7 +48,7 @@ impl Directives {
             Ok(true)
         } else if input.peek(Ident) {
             self.action_calls.push(input.parse::<ActionCall>()?);
-            Self::parse_action_call_terminator(input)
+            parse_action_call_terminator(input)
         } else {
             Err(input.error(ERR_UNEXPECTED_ITEM))
         }

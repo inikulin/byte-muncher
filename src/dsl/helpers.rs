@@ -23,9 +23,10 @@ macro_rules! parse2_if_present {
 
 macro_rules! parse3_if_present {
     ($input:ident, {$t1:tt}, {$t2:tt}, {$t3:tt}) => {
-        if $input.peek(syn::Token! { $t1 }) &&
-            $input.peek2(syn::Token! { $t2 }) &&
-            $input.peek3(syn::Token! { $t3 }) {
+        if $input.peek(syn::Token! { $t1 })
+            && $input.peek2(syn::Token! { $t2 })
+            && $input.peek3(syn::Token! { $t3 })
+        {
             $input.parse::<syn::Token! { $t1 }>()?;
             $input.parse::<syn::Token! { $t2 }>()?;
             $input.parse::<syn::Token! { $t3 }>()?;
@@ -39,6 +40,8 @@ macro_rules! parse3_if_present {
 #[cfg(test)]
 #[macro_use]
 mod test_utils {
+    // NOTE: rustfmt doesn't play well with the hack below
+    #[rustfmt::skip]
     macro_rules! curry_parse_macros {
         // HACK: because of https://github.com/rust-lang/rust/issues/35853 we
         // need to pass `$` as an argument to macro.

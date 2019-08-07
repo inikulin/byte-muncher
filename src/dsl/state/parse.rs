@@ -2,25 +2,20 @@ use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
 
-impl State {
-    #[inline]
-    fn is_next_state_name(input: ParseStream) -> bool {
-        input.peek(Ident) && input.peek2(Token! { : })
-    }
+fn parse_arms(input: ParseStream) -> ParseResult<Vec<Arm>> {
+    let mut arms = vec![];
 
-    fn parse_arms(input: ParseStream) -> ParseResult<Vec<Arm>> {
-        let mut arms = vec![];
+    loop {
+        arms.push(input.parse::<Arm>()?);
 
-        loop {
-            arms.push(input.parse::<Arm>()?);
+        let is_next_state_name = input.peek(Ident) && input.peek2(Token! { : });
 
-            if input.is_empty() || Self::is_next_state_name(input) {
-                break;
-            }
+        if is_next_state_name || input.is_empty() {
+            break;
         }
-
-        Ok(arms)
     }
+
+    Ok(arms)
 }
 
 impl Parse for State {
@@ -31,7 +26,7 @@ impl Parse for State {
 
         Ok(State {
             name,
-            arms: Self::parse_arms(input)?,
+            arms: parse_arms(input)?,
         })
     }
 }
@@ -39,7 +34,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{Directives, ArmRhs, Pattern, StateTransition};
+    use crate::dsl::{ArmRhs, Directives, Pattern, StateTransition};
 
     curry_parse_macros!($State);
 

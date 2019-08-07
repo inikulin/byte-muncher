@@ -1,7 +1,7 @@
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::token::Paren;
 use syn::{parenthesized, Error as ParseError, Ident, Lit, Result as ParseResult, Token};
-use super::*;
 
 const ERR_EMPTY_ARGS: &str = concat![
     "expected at least one action argument (action calls ",
@@ -11,40 +11,38 @@ const ERR_EMPTY_ARGS: &str = concat![
 const ERR_TOO_MANY_ARGS: &str = "too many arguments";
 const ERR_UNKNOWN_BUILT_IN: &str = "unknown built-in directive";
 
-impl ActionCall {
-    fn parse_args(input: ParseStream) -> ParseResult<Vec<Lit>> {
-        if input.peek(Paren) {
-            let parens_content;
-
-            parenthesized!(parens_content in input);
-
-            let args = parens_content
-                .parse_terminated::<_, Token! { , }>(Lit::parse)?
-                .into_iter()
-                .collect::<Vec<_>>();
-
-            if args.is_empty() {
-                Err(input.error(ERR_EMPTY_ARGS))
-            } else {
-                Ok(args)
-            }
-        } else {
-            Ok(vec![])
-        }
-    }
-
-    fn parse_pin_name(input: ParseStream) -> ParseResult<String> {
+fn parse_args(input: ParseStream) -> ParseResult<Vec<Lit>> {
+    if input.peek(Paren) {
         let parens_content;
 
         parenthesized!(parens_content in input);
 
-        let name = parens_content.parse::<Ident>()?.to_string();
+        let args = parens_content
+            .parse_terminated::<_, Token! { , }>(Lit::parse)?
+            .into_iter()
+            .collect::<Vec<_>>();
 
-        if parens_content.is_empty() {
-            Ok(name)
+        if args.is_empty() {
+            Err(input.error(ERR_EMPTY_ARGS))
         } else {
-            Err(parens_content.error(ERR_TOO_MANY_ARGS))
+            Ok(args)
         }
+    } else {
+        Ok(vec![])
+    }
+}
+
+fn parse_pin_name(input: ParseStream) -> ParseResult<String> {
+    let parens_content;
+
+    parenthesized!(parens_content in input);
+
+    let name = parens_content.parse::<Ident>()?.to_string();
+
+    if parens_content.is_empty() {
+        Ok(name)
+    } else {
+        Err(parens_content.error(ERR_TOO_MANY_ARGS))
     }
 }
 
@@ -56,14 +54,14 @@ impl Parse for ActionCall {
 
         if built_in {
             match name.as_str() {
-                "start" => Ok(ActionCall::Start(Self::parse_pin_name(input)?)),
-                "end" => Ok(ActionCall::End(Self::parse_pin_name(input)?)),
+                "start" => parse_pin_name(input).map(ActionCall::Start),
+                "end" => parse_pin_name(input).map(ActionCall::End),
                 _ => Err(ParseError::new_spanned(name_ident, ERR_UNKNOWN_BUILT_IN)),
             }
         } else {
             Ok(ActionCall::UserDefined {
                 name,
-                args: Self::parse_args(input)?,
+                args: parse_args(input)?,
                 with_error_check: parse_if_present!(input, { ? }),
             })
         }

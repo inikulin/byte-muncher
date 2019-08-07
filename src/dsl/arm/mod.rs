@@ -1,5 +1,5 @@
-mod parse;
 mod compile;
+mod parse;
 
 use crate::dsl::Directives;
 
@@ -37,7 +37,6 @@ pub enum Pattern {
     Sequence(SequencePattern),
     InputState(InputStatePattern),
 }
-
 
 #[derive(PartialEq, Debug)]
 pub struct ConditionBranch {

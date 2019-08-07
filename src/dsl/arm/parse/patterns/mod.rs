@@ -64,19 +64,20 @@ impl Parse for Pattern {
         if parse3_if_present!(input, { - }, { - }, { > }) {
             Ok(Pattern::StateEnter)
         } else if lookahead.peek(LitChar) || lookahead.peek(LitInt) {
-            Ok(Pattern::Byte(input.parse::<BytePattern>()?.0))
+            input.parse::<BytePattern>().map(|b| Pattern::Byte(b.0))
         } else if lookahead.peek(LitStr) || lookahead.peek(Bracket) {
-            Ok(Pattern::Sequence(input.parse::<SequencePattern>()?))
+            input.parse::<SequencePattern>().map(Pattern::Sequence)
         } else if lookahead.peek(Ident) {
-            Ok(Self::parse_from_ident(input)?)
+            Self::parse_from_ident(input)
         } else if lookahead.peek(Token! { _ }) {
             input.parse::<Token! { _ }>()?;
 
             Ok(Pattern::Any)
         } else if lookahead.peek(Token! { if }) {
             input.parse::<Token! { if }>()?;
-
-            Ok(Pattern::Condition(input.parse::<Ident>()?.to_string()))
+            input
+                .parse::<Ident>()
+                .map(|i| Pattern::Condition(i.to_string()))
         } else {
             Err(lookahead.error())
         }
