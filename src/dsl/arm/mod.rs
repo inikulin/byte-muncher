@@ -1,4 +1,7 @@
 mod parse;
+mod compile;
+
+use crate::dsl::Directives;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ClassPattern {
@@ -33,4 +36,27 @@ pub enum Pattern {
     StateEnter,
     Sequence(SequencePattern),
     InputState(InputStatePattern),
+}
+
+
+#[derive(PartialEq, Debug)]
+pub struct ConditionBranch {
+    pub condition: String,
+    pub directives: Directives,
+}
+
+#[derive(PartialEq, Debug)]
+pub enum ArmRhs {
+    Directives(Directives),
+    Condition {
+        if_branch: ConditionBranch,
+        else_if_branches: Vec<ConditionBranch>,
+        else_branch: Directives,
+    },
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Arm {
+    pub pattern: Pattern,
+    pub rhs: ArmRhs,
 }

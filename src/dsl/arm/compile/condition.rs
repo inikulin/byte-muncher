@@ -3,28 +3,24 @@ use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{Ident, IntSuffix, LitInt};
 
-// TODO
-// 1. Rename match_arm to arm
-// 2. Move pattern in arm
+fn compile_class_pattern(pattern: ClassPattern) -> TokenStream2 {
+    use ClassPattern::*;
 
-impl MatchArm {
-    fn compile_class_pattern(pattern: ClassPattern) -> TokenStream2 {
-        use ClassPattern::*;
-
-        match pattern {
-            Alnum => quote! { Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'0'..=b'9') },
-            Alpha => quote! { Some(b'a'..=b'z') | Some(b'A'..=b'Z') },
-            Ascii => quote! { Some(0x00..=0x7f) },
-            Lower => quote! { Some(b'a'..=b'z') },
-            Upper => quote! { Some(b'A'..=b'Z') },
-            Digit => quote! { Some(b'0'..=b'9') },
-            Xdigit => quote! { Some(b'0'..=b'9') | Some(b'a'..=b'f') | Some(b'A'..=b'F') },
-            Space => {
-                quote! { Some(b' ') | Some(b'\n') | Some(b'\r') | Some(b'\t') | Some(b'\x0C') }
-            }
+    match pattern {
+        Alnum => quote! { Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'0'..=b'9') },
+        Alpha => quote! { Some(b'a'..=b'z') | Some(b'A'..=b'Z') },
+        Ascii => quote! { Some(0x00..=0x7f) },
+        Lower => quote! { Some(b'a'..=b'z') },
+        Upper => quote! { Some(b'A'..=b'Z') },
+        Digit => quote! { Some(b'0'..=b'9') },
+        Xdigit => quote! { Some(b'0'..=b'9') | Some(b'a'..=b'f') | Some(b'A'..=b'F') },
+        Space => {
+            quote! { Some(b' ') | Some(b'\n') | Some(b'\r') | Some(b'\t') | Some(b'\x0C') }
         }
     }
+}
 
+impl Arm {
     fn compile_condition(&self, rhs: TokenStream2) -> TokenStream2 {
         use Pattern::*;
 
@@ -44,7 +40,7 @@ impl MatchArm {
                 }
             }
             Class(class) => {
-                let pattern = Self::compile_class_pattern(class);
+                let pattern = compile_class_pattern(class);
 
                 quote! {
                     #pattern => { #rhs }
@@ -62,7 +58,7 @@ impl MatchArm {
 mod tests {
     use super::*;
 
-    curry_parse_macros!($MatchArm);
+    curry_parse_macros!($Arm);
 
     macro_rules! compile {
         ($($t:tt)*) => {

@@ -8,11 +8,11 @@ impl State {
         input.peek(Ident) && input.peek2(Token! { : })
     }
 
-    fn parse_arms(input: ParseStream) -> ParseResult<Vec<MatchArm>> {
+    fn parse_arms(input: ParseStream) -> ParseResult<Vec<Arm>> {
         let mut arms = vec![];
 
         loop {
-            arms.push(input.parse::<MatchArm>()?);
+            arms.push(input.parse::<Arm>()?);
 
             if input.is_empty() || Self::is_next_state_name(input) {
                 break;
@@ -39,7 +39,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{Directives, MatchArmRhs, Pattern, StateTransition};
+    use crate::dsl::{Directives, ArmRhs, Pattern, StateTransition};
 
     curry_parse_macros!($State);
 
@@ -54,9 +54,9 @@ mod tests {
             State {
                 name: "foo_state".into(),
                 arms: vec![
-                    MatchArm {
+                    Arm {
                         pattern: Pattern::Byte(b'a'),
-                        rhs: MatchArmRhs::Directives(Directives {
+                        rhs: ArmRhs::Directives(Directives {
                             action_calls: vec![act!("bar")],
                             state_transition: Some(StateTransition {
                                 to_state: "baz_state".into(),
@@ -64,9 +64,9 @@ mod tests {
                             })
                         })
                     },
-                    MatchArm {
+                    Arm {
                         pattern: Pattern::Any,
-                        rhs: MatchArmRhs::Directives(Directives {
+                        rhs: ArmRhs::Directives(Directives {
                             action_calls: vec![act!("qux"), act!("quz")],
                             state_transition: Some(StateTransition {
                                 to_state: "qux_state".into(),

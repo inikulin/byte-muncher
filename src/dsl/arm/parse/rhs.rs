@@ -2,7 +2,7 @@ use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
 
-impl MatchArmRhs {
+impl ArmRhs {
     fn parse_condition(input: ParseStream) -> ParseResult<Self> {
         let if_branch = input.parse::<ConditionBranch>()?;
         let mut else_if_branches = vec![];
@@ -17,7 +17,7 @@ impl MatchArmRhs {
             }
         }
 
-        Ok(MatchArmRhs::Condition {
+        Ok(ArmRhs::Condition {
             if_branch,
             else_if_branches,
             else_branch: ConditionBranch::parse_braced_directives(input)?,
@@ -25,14 +25,14 @@ impl MatchArmRhs {
     }
 }
 
-impl Parse for MatchArmRhs {
+impl Parse for ArmRhs {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         if parse_if_present!(input, { if }) {
             Self::parse_condition(input)
         } else {
             let directives = input.parse::<Directives>()?;
 
-            Ok(MatchArmRhs::Directives(directives))
+            Ok(ArmRhs::Directives(directives))
         }
     }
 }
@@ -42,13 +42,13 @@ mod tests {
     use super::condition_branch::ERR_UNEXPECTED_CONTENT_AFTER_DIRECTIVES;
     use super::*;
 
-    curry_parse_macros!($MatchArmRhs);
+    curry_parse_macros!($ArmRhs);
 
     #[test]
     fn parse_directives() {
         assert_eq!(
             parse_ok! { foo, bar. },
-            MatchArmRhs::Directives(Directives {
+            ArmRhs::Directives(Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: None
             })
@@ -65,7 +65,7 @@ mod tests {
                     baz.
                 }
             },
-            MatchArmRhs::Condition {
+            ArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond".into(),
                     directives: Directives {
@@ -96,7 +96,7 @@ mod tests {
                     quz.
                 }
             },
-            MatchArmRhs::Condition {
+            ArmRhs::Condition {
                 if_branch: ConditionBranch {
                     condition: "cond1".into(),
                     directives: Directives {

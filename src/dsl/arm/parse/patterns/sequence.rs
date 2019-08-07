@@ -1,7 +1,7 @@
+use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::token::Bracket;
 use syn::{bracketed, Error as ParseError, Ident, LitStr, Result as ParseResult, Token};
-use super::*;
 
 const ERR_STR_IS_NOT_ASCII: &str = concat![
     "characters in string sequence pattern should be in the ASCII range.",
@@ -76,8 +76,8 @@ impl Parse for SequencePattern {
 
 #[cfg(test)]
 mod tests {
+    use super::byte::{ERR_CHAR_IS_NOT_ASCII, ERR_INT_IS_OUT_OF_BOUNDS};
     use super::*;
-    use crate::dsl::patterns::parse::byte::{ERR_CHAR_IS_NOT_ASCII, ERR_INT_IS_OUT_OF_BOUNDS};
 
     curry_parse_macros!($SequencePattern);
 

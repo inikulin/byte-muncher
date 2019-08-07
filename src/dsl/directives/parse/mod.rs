@@ -5,7 +5,7 @@ use syn::{Ident, Result as ParseResult, Token};
 use super::*;
 
 const ERR_UNEXPECTED_ITEM: &str = concat![
-    "match arm directives should consist of zero or more colon-terminated action calls with ",
+    "arm directives should consist of zero or more colon-terminated action calls with ",
     "an optional trailing state transition (`--> {state}`)"
 ];
 

@@ -38,7 +38,7 @@ mod tests {
     curry_parse_macros!($ConditionBranch);
 
     #[test]
-    fn parse_match_arm() {
+    fn parse() {
         assert_eq!(
             parse_ok! {
                 cond {

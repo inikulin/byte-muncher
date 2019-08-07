@@ -28,7 +28,7 @@ impl Parse for Grammar {
 mod tests {
     use super::*;
     use crate::dsl::{
-        Directives, InputStatePattern, MatchArm, MatchArmRhs, Pattern, StateTransition,
+        Directives, InputStatePattern, Arm, ArmRhs, Pattern, StateTransition,
     };
 
     curry_parse_macros!($Grammar);
@@ -57,9 +57,9 @@ mod tests {
                     State {
                         name: "foo_state".into(),
                         arms: vec![
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::Byte(b'a'),
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![act!("bar")],
                                     state_transition: Some(StateTransition {
                                         to_state: "baz_state".into(),
@@ -67,9 +67,9 @@ mod tests {
                                     })
                                 })
                             },
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::Any,
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![act!("qux"), act!("quz")],
                                     state_transition: Some(StateTransition {
                                         to_state: "qux_state".into(),
@@ -82,16 +82,16 @@ mod tests {
                     State {
                         name: "baz_state".into(),
                         arms: vec![
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::InputState(InputStatePattern::Eof),
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![act!("qux")],
                                     state_transition: None
                                 })
                             },
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::Any,
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![],
                                     state_transition: Some(StateTransition {
                                         to_state: "qux_state".into(),
@@ -104,16 +104,16 @@ mod tests {
                     State {
                         name: "qux_state".into(),
                         arms: vec![
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::StateEnter,
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![act!("qux"), act!("quz")],
                                     state_transition: None
                                 })
                             },
-                            MatchArm {
+                            Arm {
                                 pattern: Pattern::Any,
-                                rhs: MatchArmRhs::Directives(Directives {
+                                rhs: ArmRhs::Directives(Directives {
                                     action_calls: vec![act!("quz")],
                                     state_transition: None
                                 })

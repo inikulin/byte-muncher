@@ -1,17 +1,18 @@
 mod condition_branch;
 mod rhs;
+mod patterns;
 
 use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Result as ParseResult, Token};
 
-impl Parse for MatchArm {
+impl Parse for Arm {
     fn parse(input: ParseStream) -> ParseResult<Self> {
         let pattern = input.parse::<Pattern>()?;
 
         input.parse::<Token! { => }>()?;
 
-        Ok(MatchArm {
+        Ok(Arm {
             pattern,
             rhs: input.parse()?,
         })
@@ -23,15 +24,15 @@ mod tests {
     use super::*;
     use crate::dsl::{ActionCall, ClassPattern, ConditionBranch, Directives, StateTransition};
 
-    curry_parse_macros!($MatchArm);
+    curry_parse_macros!($Arm);
 
     #[test]
-    fn parse_match_arm() {
+    fn parse_arm() {
         assert_eq!(
             parse_ok! { 'a' => foo, --> baz_state. },
-            MatchArm {
+            Arm {
                 pattern: Pattern::Byte(b'a'),
-                rhs: MatchArmRhs::Directives(Directives {
+                rhs: ArmRhs::Directives(Directives {
                     action_calls: vec![act!("foo")],
                     state_transition: Some(StateTransition {
                         to_state: "baz_state".into(),
@@ -43,9 +44,9 @@ mod tests {
 
         assert_eq!(
             parse_ok! { alpha => foo, bar, baz(42)?. },
-            MatchArm {
+            Arm {
                 pattern: Pattern::Class(ClassPattern::Alpha),
-                rhs: MatchArmRhs::Directives(Directives {
+                rhs: ArmRhs::Directives(Directives {
                     action_calls: vec![
                         act!("foo"),
                         act!("bar"),
@@ -68,9 +69,9 @@ mod tests {
                     bar.
                 }
             },
-            MatchArm {
+            Arm {
                 pattern: Pattern::Byte(b'z'),
-                rhs: MatchArmRhs::Condition {
+                rhs: ArmRhs::Condition {
                     if_branch: ConditionBranch {
                         condition: "cond".into(),
                         directives: Directives {
