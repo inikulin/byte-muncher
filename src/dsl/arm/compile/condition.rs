@@ -20,35 +20,48 @@ fn compile_class_pattern(pattern: ClassPattern) -> TokenStream2 {
     }
 }
 
+fn compile_input_state_pattern(pattern: InputStatePattern) -> TokenStream2 {
+    use InputStatePattern::*;
+
+    match pattern {
+        Eoc => quote! { None if !input.is_last() },
+        Eof => quote! { None },
+    }
+}
+
+fn compile_state_enter_prelude(rhs: TokenStream2) -> TokenStream2 {
+    quote! {
+        if self.ctx.__state_enter {
+            self.ctx.__state_enter = false;
+            #rhs
+        }
+    }
+}
+
+fn compile_condition_pattern(condition: &str) -> TokenStream2 {
+    let condition = Ident::new(condition, Span::call_site());
+
+    quote! { Some(b) if self.#condition(b) }
+}
+
 impl Arm {
     fn compile_condition(&self, rhs: TokenStream2) -> TokenStream2 {
         use Pattern::*;
 
+        macro_rules! match_arm {
+            ($pattern:expr) => {{
+                let pattern = $pattern;
+                quote! { #pattern => { #rhs } }
+            }};
+        }
+
         match self.pattern {
-            Byte(b) => {
-                let b = LitInt::new(b.into(), IntSuffix::U8, Span::call_site());
-
-                quote! {
-                    #b => { #rhs }
-                }
-            }
-            Condition(ref condition) => {
-                let condition = Ident::new(condition, Span::call_site());
-
-                quote! {
-                    Some(b) if self.#condition(b) => { #rhs }
-                }
-            }
-            Class(class) => {
-                let pattern = compile_class_pattern(class);
-
-                quote! {
-                    #pattern => { #rhs }
-                }
-            }
-            Any => quote! {
-                _ => { #rhs }
-            },
+            StateEnter => compile_state_enter_prelude(rhs),
+            Byte(b) => match_arm!(LitInt::new(b.into(), IntSuffix::U8, Span::call_site())),
+            Class(c) => match_arm!(compile_class_pattern(c)),
+            InputState(s) => match_arm!(compile_input_state_pattern(s)),
+            Condition(ref c) => match_arm!(compile_condition_pattern(c)),
+            Any => match_arm!(quote! { _ }),
             _ => unreachable!(),
         }
     }
@@ -178,4 +191,41 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn compile_state_enter() {
+        assert_eq!(
+            compile! {
+                --> => __RHS__.
+            },
+            code_str! {
+                if self.ctx.__state_enter {
+                    self.ctx.__state_enter = false;
+                    __RHS__
+                }
+            }
+        );
+    }
+
+    #[test]
+    fn compile_input_state_pattern() {
+        assert_eq!(
+            compile! {
+                eof => __RHS__.
+            },
+            code_str! {
+                None => { __RHS__ }
+            }
+        );
+
+        assert_eq!(
+            compile! {
+                eoc => __RHS__.
+            },
+            code_str! {
+                None if !input.is_last() => { __RHS__ }
+            }
+        );
+    }
+
 }

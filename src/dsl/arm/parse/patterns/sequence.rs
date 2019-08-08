@@ -15,12 +15,13 @@ fn parse_ignore_case_flag(input: ParseStream) -> ParseResult<bool> {
     if input.lookahead1().peek(Token! { | }) {
         input.parse::<Token! { | }>()?;
 
-        let flag = input.parse::<Ident>()?;
+        let flag_ident = input.parse::<Ident>()?;
+        let flag = flag_ident.to_string();
 
-        if flag.to_string() == "i" {
+        if flag == "i" {
             Ok(true)
         } else {
-            Err(ParseError::new_spanned(flag, ERR_UNSUPPORTED_FLAG))
+            Err(ParseError::new_spanned(flag_ident, ERR_UNSUPPORTED_FLAG))
         }
     } else {
         Ok(false)

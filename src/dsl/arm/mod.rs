@@ -15,7 +15,7 @@ pub enum ClassPattern {
     Space,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum InputStatePattern {
     Eoc,
     Eof,
@@ -29,13 +29,13 @@ pub struct SequencePattern {
 
 #[derive(Debug, PartialEq)]
 pub enum Pattern {
+    StateEnter,
     Byte(u8),
     Class(ClassPattern),
-    Condition(String),
-    Any,
-    StateEnter,
-    Sequence(SequencePattern),
     InputState(InputStatePattern),
+    Condition(String),
+    Sequence(SequencePattern),
+    Any,
 }
 
 #[derive(PartialEq, Debug)]
