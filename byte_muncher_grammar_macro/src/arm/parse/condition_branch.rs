@@ -48,7 +48,8 @@ mod tests {
                 directives: Directives {
                     action_calls: vec![act!("foo")],
                     state_transition: Some(StateTransition {
-                        to_state: "bar_state".into(),
+                        target: "bar_state".into(),
+                        dynamic: false,
                         epsilon_move: false
                     })
                 }

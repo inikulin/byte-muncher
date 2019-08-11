@@ -4,7 +4,8 @@ use syn::Lit;
 
 #[derive(PartialEq, Debug)]
 pub struct StateTransition {
-    pub to_state: String,
+    pub target: String,
+    pub dynamic: bool,
     pub epsilon_move: bool,
 }
 

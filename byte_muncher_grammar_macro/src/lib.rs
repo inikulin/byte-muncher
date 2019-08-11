@@ -20,8 +20,6 @@ pub trait Compile {
 
 // TODO
 // v0.1.0
-// 2. Rename `as in <state>` to `move --> <state>` (epsilon_move to epsilon move)
-// 3. dyn state transition
 // 4. Initial state
 // 5. Generate SM streaming
 // 6. module system

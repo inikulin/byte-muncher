@@ -54,7 +54,8 @@ mod tests {
                         rhs: ArmRhs::Directives(Directives {
                             action_calls: vec![act!("bar")],
                             state_transition: Some(StateTransition {
-                                to_state: "baz_state".into(),
+                                target: "baz_state".into(),
+                                dynamic: false,
                                 epsilon_move: false
                             })
                         })
@@ -64,7 +65,8 @@ mod tests {
                         rhs: ArmRhs::Directives(Directives {
                             action_calls: vec![act!("qux"), act!("quz")],
                             state_transition: Some(StateTransition {
-                                to_state: "qux_state".into(),
+                                target: "qux_state".into(),
+                                dynamic: false,
                                 epsilon_move: true
                             })
                         })

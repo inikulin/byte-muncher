@@ -17,8 +17,11 @@ fn try_parse_state_transition(input: ParseStream) -> ParseResult<Option<StateTra
     if epsilon_move || input.peek(Token! { - }) {
         parse3!(input, { - }, { - }, { > });
 
+        let dynamic = parse_if_present!(input, { dyn });
+
         transition = Some(StateTransition {
-            to_state: input.parse::<Ident>()?.to_string(),
+            target: input.parse::<Ident>()?.to_string(),
+            dynamic,
             epsilon_move,
         });
 
@@ -108,7 +111,8 @@ mod tests {
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
-                    to_state: "baz_state".into(),
+                    target: "baz_state".into(),
+                    dynamic: false,
                     epsilon_move: false
                 })
             }
@@ -119,7 +123,20 @@ mod tests {
             Directives {
                 action_calls: vec![],
                 state_transition: Some(StateTransition {
-                    to_state: "foo_state".into(),
+                    target: "foo_state".into(),
+                    dynamic: false,
+                    epsilon_move: false
+                })
+            }
+        );
+
+        assert_eq!(
+            parse_ok! { --> dyn foo_state. },
+            Directives {
+                action_calls: vec![],
+                state_transition: Some(StateTransition {
+                    target: "foo_state".into(),
+                    dynamic: true,
                     epsilon_move: false
                 })
             }
@@ -130,7 +147,8 @@ mod tests {
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
-                    to_state: "baz_state".into(),
+                    target: "baz_state".into(),
+                    dynamic: false,
                     epsilon_move: true
                 })
             }
@@ -141,7 +159,20 @@ mod tests {
             Directives {
                 action_calls: vec![],
                 state_transition: Some(StateTransition {
-                    to_state: "foo_state".into(),
+                    target: "foo_state".into(),
+                    dynamic: false,
+                    epsilon_move: true
+                })
+            }
+        );
+
+        assert_eq!(
+            parse_ok! { move --> dyn foo_state. },
+            Directives {
+                action_calls: vec![],
+                state_transition: Some(StateTransition {
+                    target: "foo_state".into(),
+                    dynamic: true,
                     epsilon_move: true
                 })
             }
