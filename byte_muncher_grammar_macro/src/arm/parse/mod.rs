@@ -36,7 +36,7 @@ mod tests {
                     action_calls: vec![act!("foo")],
                     state_transition: Some(StateTransition {
                         to_state: "baz_state".into(),
-                        reconsume: false
+                        epsilon_move: false
                     })
                 })
             }

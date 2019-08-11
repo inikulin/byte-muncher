@@ -4,54 +4,42 @@ use super::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, Result as ParseResult, Token};
 
-const ERR_UNEXPECTED_ITEM: &str = concat![
-    "arm directives should consist of zero or more colon-terminated action calls with ",
-    "an optional trailing state transition (`--> {state}`)"
-];
+#[derive(PartialEq)]
+enum Terminator {
+    Comma,
+    Dot,
+}
 
-fn parse_action_call_terminator(input: ParseStream) -> ParseResult<bool> {
+fn try_parse_state_transition(input: ParseStream) -> ParseResult<Option<StateTransition>> {
+    let mut transition = None;
+    let epsilon_move = parse_if_present!(input, { move });
+
+    if epsilon_move || input.peek(Token! { - }) {
+        parse3!(input, { - }, { - }, { > });
+
+        transition = Some(StateTransition {
+            to_state: input.parse::<Ident>()?.to_string(),
+            epsilon_move,
+        });
+
+        input.parse::<Token! { . }>()?;
+    }
+
+    Ok(transition)
+}
+
+fn parse_action_call(input: ParseStream) -> ParseResult<(ActionCall, Terminator)> {
+    let call = input.parse::<ActionCall>()?;
     let lookahead = input.lookahead1();
 
     if lookahead.peek(Token! { , }) {
         input.parse::<Token! { , }>()?;
-        Ok(false)
+        Ok((call, Terminator::Comma))
     } else if lookahead.peek(Token! { . }) {
         input.parse::<Token! { . }>()?;
-        Ok(true)
+        Ok((call, Terminator::Dot))
     } else {
         Err(lookahead.error())
-    }
-}
-
-impl Directives {
-    fn parse_state_transition_destination(
-        &mut self,
-        input: ParseStream,
-        reconsume: bool,
-    ) -> ParseResult<()> {
-        self.state_transition = Some(StateTransition {
-            to_state: input.parse::<Ident>()?.to_string(),
-            reconsume,
-        });
-
-        input.parse::<Token! { . }>()?;
-
-        Ok(())
-    }
-
-    fn parse_item(&mut self, input: ParseStream) -> ParseResult<bool> {
-        if parse3_if_present!(input, { - }, { - }, { > }) {
-            self.parse_state_transition_destination(input, false)?;
-            Ok(true)
-        } else if parse2_if_present!(input, { as }, { in }) {
-            self.parse_state_transition_destination(input, true)?;
-            Ok(true)
-        } else if input.peek(Ident) {
-            self.action_calls.push(input.parse::<ActionCall>()?);
-            parse_action_call_terminator(input)
-        } else {
-            Err(input.error(ERR_UNEXPECTED_ITEM))
-        }
     }
 }
 
@@ -60,8 +48,24 @@ impl Parse for Directives {
         let mut directives = Self::default();
 
         // NOTE: check for empty list case before parsing directives
-        if !parse_if_present!(input, { . }) {
-            while !directives.parse_item(input)? {}
+        if parse_if_present!(input, { . }) {
+            return Ok(directives);
+        }
+
+        loop {
+            directives.state_transition = try_parse_state_transition(input)?;
+
+            if directives.state_transition.is_some() {
+                break;
+            }
+
+            let (call, terminator) = parse_action_call(input)?;
+
+            directives.action_calls.push(call);
+
+            if terminator == Terminator::Dot {
+                break;
+            }
         }
 
         Ok(directives)
@@ -105,7 +109,7 @@ mod tests {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
                     to_state: "baz_state".into(),
-                    reconsume: false
+                    epsilon_move: false
                 })
             }
         );
@@ -116,29 +120,29 @@ mod tests {
                 action_calls: vec![],
                 state_transition: Some(StateTransition {
                     to_state: "foo_state".into(),
-                    reconsume: false
+                    epsilon_move: false
                 })
             }
         );
 
         assert_eq!(
-            parse_ok! { foo, bar, as in baz_state. },
+            parse_ok! { foo, bar, move --> baz_state. },
             Directives {
                 action_calls: vec![act!("foo"), act!("bar")],
                 state_transition: Some(StateTransition {
                     to_state: "baz_state".into(),
-                    reconsume: true
+                    epsilon_move: true
                 })
             }
         );
 
         assert_eq!(
-            parse_ok! { as in foo_state. },
+            parse_ok! { move --> foo_state. },
             Directives {
                 action_calls: vec![],
                 state_transition: Some(StateTransition {
                     to_state: "foo_state".into(),
-                    reconsume: true
+                    epsilon_move: true
                 })
             }
         );
@@ -146,8 +150,8 @@ mod tests {
 
     #[test]
     fn unexpected_item_error() {
-        assert_eq!(parse_err! { foo, 123. }, ERR_UNEXPECTED_ITEM);
-        assert_eq!(parse_err! { foo, -- bar. }, ERR_UNEXPECTED_ITEM);
+        assert_eq!(parse_err! { foo, 123. }, "expected identifier");
+        assert_eq!(parse_err! { foo, -- bar. }, "expected `>`");
     }
 
     #[test]

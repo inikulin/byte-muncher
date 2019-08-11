@@ -38,7 +38,7 @@ mod tests {
                 TestGrammar = {
                     foo_state:
                         'a' => bar, --> baz_state.
-                        _   => qux, quz, as in qux_state.
+                        _   => qux, quz, move --> qux_state.
 
                     baz_state:
                         eof => qux.
@@ -61,7 +61,7 @@ mod tests {
                                     action_calls: vec![act!("bar")],
                                     state_transition: Some(StateTransition {
                                         to_state: "baz_state".into(),
-                                        reconsume: false
+                                        epsilon_move: false
                                     })
                                 })
                             },
@@ -71,7 +71,7 @@ mod tests {
                                     action_calls: vec![act!("qux"), act!("quz")],
                                     state_transition: Some(StateTransition {
                                         to_state: "qux_state".into(),
-                                        reconsume: true
+                                        epsilon_move: true
                                     })
                                 })
                             }
@@ -93,7 +93,7 @@ mod tests {
                                     action_calls: vec![],
                                     state_transition: Some(StateTransition {
                                         to_state: "qux_state".into(),
-                                        reconsume: false
+                                        epsilon_move: false
                                     })
                                 })
                             }

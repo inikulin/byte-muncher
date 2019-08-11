@@ -20,7 +20,8 @@ pub trait Compile {
 
 // TODO
 // v0.1.0
-// 3. Rename `as in <state>` to `move --> <state>` (reconsume to epsilon move)
+// 2. Rename `as in <state>` to `move --> <state>` (epsilon_move to epsilon move)
+// 3. dyn state transition
 // 4. Initial state
 // 5. Generate SM streaming
 // 6. module system
@@ -37,8 +38,7 @@ pub trait Compile {
 //    d. Inconsistent action args
 //    e. Inconsistent action error checks
 //    f. Reconsume in sequence (?)
-// 5. Non-streaming parser
-// 6. JSON POC
+// 5. JSON POC
 
 // v0.3.0
 // 1. Skip optimisation
