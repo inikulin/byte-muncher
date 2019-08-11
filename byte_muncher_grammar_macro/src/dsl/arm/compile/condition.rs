@@ -30,6 +30,7 @@ fn compile_input_state_pattern(pattern: InputStatePattern) -> TokenStream2 {
 }
 
 fn compile_state_enter_prelude(rhs: TokenStream2) -> TokenStream2 {
+    // TODO move internal variables to lazy_static constants
     quote! {
         if self.ctx.__state_enter {
             self.ctx.__state_enter = false;
@@ -38,6 +39,7 @@ fn compile_state_enter_prelude(rhs: TokenStream2) -> TokenStream2 {
     }
 }
 
+// TODO: collect condition name
 fn compile_condition_pattern(condition: &str) -> TokenStream2 {
     let condition = Ident::new(condition, Span::call_site());
 
@@ -66,6 +68,15 @@ impl Arm {
         }
     }
 }
+
+// Whole length available:
+//   match - enter |
+//   skip
+
+// Part available:
+// if last chunk - skip
+// match - block / return |
+// skip
 
 #[cfg(test)]
 mod tests {
@@ -227,5 +238,4 @@ mod tests {
             }
         );
     }
-
 }

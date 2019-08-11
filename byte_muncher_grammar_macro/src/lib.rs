@@ -33,3 +33,13 @@ mod dsl;
 
 // v1.0.0
 // 1. Other optimisations
+
+// #[derive(Parser)]
+// #[grammar(Html)]
+// struct Lexer {
+//     ctx: LexerCtx
+// }
+//
+// impl Html::Actions for Lexer {
+//
+// }
