@@ -1,6 +1,6 @@
 mod parse;
 
-use crate::dsl::Arm;
+use crate::Arm;
 
 #[derive(PartialEq, Debug)]
 pub struct State {

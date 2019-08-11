@@ -79,7 +79,7 @@ mod test_utils {
 
     macro_rules! act {
         ($name:expr) => {
-            crate::dsl::ActionCall::UserDefined {
+            crate::ActionCall::UserDefined {
                 name: $name.into(),
                 args: vec![],
                 with_error_check: false,

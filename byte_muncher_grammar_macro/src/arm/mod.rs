@@ -1,7 +1,7 @@
 mod compile;
 mod parse;
 
-use crate::dsl::Directives;
+use crate::Directives;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ClassPattern {

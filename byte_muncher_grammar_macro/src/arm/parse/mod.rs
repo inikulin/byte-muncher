@@ -22,7 +22,7 @@ impl Parse for Arm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{ActionCall, ClassPattern, ConditionBranch, Directives, StateTransition};
+    use crate::{ActionCall, ClassPattern, ConditionBranch, Directives, StateTransition};
 
     curry_parse_macros!($Arm);
 

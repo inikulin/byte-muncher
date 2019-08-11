@@ -31,7 +31,7 @@ impl Parse for ConditionBranch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::StateTransition;
+    use crate::StateTransition;
 
     curry_parse_macros!($ConditionBranch);
 

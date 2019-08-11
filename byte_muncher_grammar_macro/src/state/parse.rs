@@ -34,7 +34,7 @@ impl Parse for State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{ArmRhs, Directives, Pattern, StateTransition};
+    use crate::{ArmRhs, Directives, Pattern, StateTransition};
 
     curry_parse_macros!($State);
 

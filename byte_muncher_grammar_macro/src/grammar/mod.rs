@@ -1,6 +1,6 @@
 mod parse;
 
-use crate::dsl::State;
+use crate::State;
 
 #[derive(PartialEq, Debug)]
 pub struct Grammar {

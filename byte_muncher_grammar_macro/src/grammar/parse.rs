@@ -27,7 +27,7 @@ impl Parse for Grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dsl::{Arm, ArmRhs, Directives, InputStatePattern, Pattern, StateTransition};
+    use crate::{Arm, ArmRhs, Directives, InputStatePattern, Pattern, StateTransition};
 
     curry_parse_macros!($Grammar);
 
