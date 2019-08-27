@@ -23,7 +23,7 @@ macro_rules! parse3_if_present {
             && $input.peek2(syn::Token! { $t2 })
             && $input.peek3(syn::Token! { $t3 })
         {
-            parse3!($input, {$t1}, {$t2}, {$t3});
+            parse3!($input, { $t1 }, { $t2 }, { $t3 });
             true
         } else {
             false
@@ -31,31 +31,31 @@ macro_rules! parse3_if_present {
     };
 }
 
+macro_rules! parse {
+    (<$AstNode:path>, { $($t:tt)* }) => {
+        syn::parse_str::<$AstNode>(stringify!($($t)*))
+    };
+}
+
 #[cfg(test)]
 #[macro_use]
-mod test_utils {
+mod test_helpers {
     // NOTE: rustfmt doesn't play well with the hack below
     #[rustfmt::skip]
     macro_rules! curry_parse_macros {
         // HACK: because of https://github.com/rust-lang/rust/issues/35853 we
         // need to pass `$` as an argument to macro.
-        ($d:tt $AstNode:ident) => {
-            macro_rules! parse {
-                ($d ($d t:tt)*) => {
-                    syn::parse_str::<$AstNode>(stringify!($d ($d t)*))
-                };
-            }
-
+        ($d:tt $AstNode:path) => {
             macro_rules! parse_ok {
                 ($d ($d t:tt)*) => {
-                    parse!($d ($d t)*).unwrap()
+                    parse!(<$AstNode>, { $d ($d t)* }).unwrap()
                 };
             }
 
             #[allow(unused_macros)]
             macro_rules! parse_err {
                 ($d ($d t:tt)*) => {
-                    format!("{}", parse!($d ($d t)*).unwrap_err())
+                    format!("{}", parse!(<$AstNode>, { $d ($d t)* }).unwrap_err())
                 };
             }
         };
@@ -64,8 +64,7 @@ mod test_utils {
     macro_rules! code_str {
         ($($t:tt)*) => {
             // NOTE: parse-compile to discard formating
-            stringify!($($t)*)
-                .parse::<proc_macro2::TokenStream>()
+            parse!(<proc_macro2::TokenStream>, { $($t)* })
                 .expect("Rust code parsing failed")
                 .to_string()
         };
@@ -83,7 +82,7 @@ mod test_utils {
 
     macro_rules! lit {
         ($t:tt) => {
-            syn::parse_str::<syn::Lit>(stringify!($t)).unwrap()
+            parse!(<syn::Lit>, { $t }).unwrap()
         };
     }
 }

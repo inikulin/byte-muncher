@@ -1,4 +1,4 @@
-use crate::{ClassPattern, InputStatePattern, Pattern, Arm};
+use crate::{Arm, ClassPattern, InputStatePattern, Pattern};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{Ident, IntSuffix, LitInt};
@@ -32,8 +32,8 @@ fn compile_input_state_pattern(pattern: InputStatePattern) -> TokenStream2 {
 fn compile_state_enter_prelude(rhs: TokenStream2) -> TokenStream2 {
     // TODO move internal variables to lazy_static constants
     quote! {
-        if self.ctx.__state_enter {
-            self.ctx.__state_enter = false;
+        if self.__state_enter {
+            self.__state_enter = false;
             #rhs
         }
     }
@@ -210,8 +210,8 @@ mod tests {
                 --> => __RHS__.
             },
             code_str! {
-                if self.ctx.__state_enter {
-                    self.ctx.__state_enter = false;
+                if self.__state_enter {
+                    self.__state_enter = false;
                     __RHS__
                 }
             }
