@@ -31,15 +31,15 @@ macro_rules! parse3_if_present {
     };
 }
 
-macro_rules! parse {
-    (<$AstNode:path>, { $($t:tt)* }) => {
-        syn::parse_str::<$AstNode>(stringify!($($t)*))
-    };
-}
-
 #[cfg(test)]
 #[macro_use]
 mod test_helpers {
+    macro_rules! parse {
+        (<$AstNode:path>, { $($t:tt)* }) => {
+            syn::parse_str::<$AstNode>(stringify!($($t)*))
+        };
+    }
+
     // NOTE: rustfmt doesn't play well with the hack below
     #[rustfmt::skip]
     macro_rules! curry_parse_macros {

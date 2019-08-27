@@ -3,8 +3,10 @@
 #[macro_use]
 mod helpers;
 
-mod arm;
+#[macro_use]
 mod compile;
+
+mod arm;
 mod directives;
 mod grammar;
 mod state;

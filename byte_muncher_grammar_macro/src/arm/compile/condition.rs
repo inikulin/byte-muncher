@@ -24,16 +24,21 @@ fn compile_input_state_pattern(pattern: InputStatePattern) -> TokenStream2 {
     use InputStatePattern::*;
 
     match pattern {
-        Eoc => quote! { None if !input.is_last() },
+        Eoc => {
+            let is_last_input = gen_parser_intrinsics!(is_last_input);
+
+            quote! { None if !#is_last_input }
+        }
         Eof => quote! { None },
     }
 }
 
 fn compile_state_enter_prelude(rhs: TokenStream2) -> TokenStream2 {
-    // TODO move internal variables to lazy_static constants
+    let state_enter_flag = gen_parser_intrinsics!(state_enter_flag);
+
     quote! {
-        if self.__state_enter {
-            self.__state_enter = false;
+        if #state_enter_flag {
+            #state_enter_flag = false;
             #rhs
         }
     }
