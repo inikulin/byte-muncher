@@ -9,8 +9,8 @@ proc-macro2 = "0.4.30"
 syn = { version = "0.15.39", features = ["extra-traits"] }
 quote = "0.6.13"
 
-[dev-dependencies]
-pre-commit = "0.5.2"
+[dev-dependencies.cargo-husky]
+version = "1.4.0"
+default-features = false
+features = ["user-hooks"]
 
-[package.metadata.precommit]
-fmt = "cargo clippy && cargo fmt && git add -u"

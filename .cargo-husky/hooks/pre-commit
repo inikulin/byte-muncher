@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -e
+
+cargo clippy --all
+cargo fmt --all
+git add -u
