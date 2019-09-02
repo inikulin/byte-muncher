@@ -10,7 +10,7 @@ macro_rules! gen_parser_intrinsics {
     };
 
     (is_last_input) => {
-        quote::quote! { input.is_last() }
+        quote::quote! { self.__is_last_input }
     };
 }
 

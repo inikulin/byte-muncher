@@ -56,3 +56,8 @@ pub use self::state::*;
 // impl Html::Actions for Lexer {
 //
 // }
+
+// 1. Generate Pins struct
+// 2. Generate G::States which has get_pins() that returns pins
+// 3. Generate G::Actions trait - should be implemented by user
+// 4. Parser macro implements G::States and generates write and end code, adds pins field

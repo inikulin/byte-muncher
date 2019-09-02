@@ -251,7 +251,7 @@ mod tests {
                 eoc => __RHS__.
             },
             code_str! {
-                None if !input.is_last() => { __RHS__ }
+                None if !self.__is_last_input => { __RHS__ }
             }
         );
     }
