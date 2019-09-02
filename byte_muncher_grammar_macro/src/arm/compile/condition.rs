@@ -1,4 +1,4 @@
-use crate::{Arm, ClassPattern, InputStatePattern, Pattern};
+use crate::{Arm, ClassPattern, InputStatePattern, Pattern, SequencePattern};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{Ident, IntSuffix, LitInt};
@@ -51,6 +51,27 @@ fn compile_condition_pattern(condition: &str) -> TokenStream2 {
     quote! { Some(b) if self.#condition(b) }
 }
 
+// TODO OPTIMISATION: don't buffer if there are no markers in RHS
+fn compile_sequence_pattern(pattern: &SequencePattern) -> TokenStream2 {
+    /*
+    let pos = input.pos();
+    let available = input.len() - pos;
+
+    if available < $pattern_len {
+        if !input.is_last() && input[pos..].eq|eq_ignore_ascii_case($pattern[..available]) {
+            self.pins.__sequence_matching_start.start(Some(pos));
+            return LoopTermination::Break;
+        }
+    } else if input[pos..pos+$pattern_len].eq|eq_ignore_ascii_case(pattern) {
+        #RHS
+    }
+
+    self.markers.__sequence_matching_start = None;
+
+    */
+    quote! {}
+}
+
 impl Arm {
     fn compile_condition(&self, rhs: TokenStream2) -> TokenStream2 {
         use Pattern::*;
@@ -69,19 +90,10 @@ impl Arm {
             InputState(s) => match_arm!(compile_input_state_pattern(s)),
             Condition(ref c) => match_arm!(compile_condition_pattern(c)),
             Any => match_arm!(quote! { _ }),
-            _ => unreachable!(),
+            Sequence(ref s) => compile_sequence_pattern(s),
         }
     }
 }
-
-// Whole length available:
-//   match - enter |
-//   skip
-
-// Part available:
-// if last chunk - skip
-// match - block / return |
-// skip
 
 #[cfg(test)]
 mod tests {
