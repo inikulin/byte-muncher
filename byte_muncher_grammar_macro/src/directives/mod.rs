@@ -22,6 +22,5 @@ pub enum ActionCall {
         args: Vec<Lit>,
         with_error_check: bool,
     },
-    Start(String),
-    End(String),
+    Pin(String),
 }

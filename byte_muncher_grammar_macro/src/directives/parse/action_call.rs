@@ -54,8 +54,7 @@ impl Parse for ActionCall {
 
         if built_in {
             match name.as_str() {
-                "start" => parse_pin_name(input).map(ActionCall::Start),
-                "end" => parse_pin_name(input).map(ActionCall::End),
+                "pin" => parse_pin_name(input).map(ActionCall::Pin),
                 _ => Err(ParseError::new_spanned(name_ident, ERR_UNKNOWN_BUILT_IN)),
             }
         } else {
@@ -115,14 +114,13 @@ mod tests {
 
     #[test]
     fn parse_built_in() {
-        assert_eq!(parse_ok! { @start(foo) }, ActionCall::Start("foo".into()));
-        assert_eq!(parse_ok! { @end(bar) }, ActionCall::End("bar".into()));
+        assert_eq!(parse_ok! { @pin(foo) }, ActionCall::Pin("foo".into()));
+        assert_eq!(parse_ok! { @pin(bar) }, ActionCall::Pin("bar".into()));
     }
 
     #[test]
     fn too_many_args_for_built_in_error() {
-        assert_eq!(parse_err! { @start(foo, bar) }, ERR_TOO_MANY_ARGS);
-        assert_eq!(parse_err! { @end(foo, bar) }, ERR_TOO_MANY_ARGS);
+        assert_eq!(parse_err! { @pin(foo, bar) }, ERR_TOO_MANY_ARGS);
     }
 
     #[test]
