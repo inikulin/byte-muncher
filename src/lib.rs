@@ -57,7 +57,10 @@ pub use self::state::*;
 //
 // }
 
-// 1. Generate Pins struct
-// 2. Generate G::States which has get_pins() that returns pins
-// 3. Generate G::Actions trait - should be implemented by user
-// 4. Parser macro implements G::States and generates write and end code, adds pins field
+// Kiss:
+// 1. Generate StateMachine trait
+// 2. Generate Ctx struct
+// 3. Return to start - end pins
+// 4. Ctx stores pins and inner state
+// 5. expose run_parsing_loop method
+// 6. Don't buffer
